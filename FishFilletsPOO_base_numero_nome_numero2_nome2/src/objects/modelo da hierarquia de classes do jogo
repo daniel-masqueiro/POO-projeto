@@ -1,7 +1,8 @@
 GameObject {  (abstract)
 
         Wall {Layer: 3} done
-        SteelPipe {Layer: 3} done
+        SteelHorizontal {Layer: 3} done
+        SteelVertical {Layer: 3} done
         WallWithHole {Layer: 3} done
         Trunk {Layer: 1} done
         Water {Layer: 0} done
