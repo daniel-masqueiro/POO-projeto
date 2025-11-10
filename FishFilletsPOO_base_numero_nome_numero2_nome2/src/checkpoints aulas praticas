@@ -1,6 +1,6 @@
 CheckPoint 1: aula prática entre 18 e 21/nov
 o Entender a mecânica de comunicação entre o motor de jogo e a GUI;
-o Criar modelo da hierarquia de classes do jogo (UML);
+o Criar modelo da hierarquia de classes do jogo (UML); feito
 o Ler o ficheiro de configuração e representar os elementos na GUI;
 o Implementar o movimento dos dois peixes.
 
