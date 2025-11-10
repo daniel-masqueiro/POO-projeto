@@ -1,31 +1,30 @@
 GameObject {  (abstract)
 
-    FixedElement {  (abstract)
-        Wall {Layer: 3}
-        SteelPipe {Layer: 3}
-        WallWithHole {Layer: 3}
-        Trunk {Layer: 1}
-        Water {Layer: 0}
-    }
+        Wall {Layer: 3} done
+        SteelPipe {Layer: 3} done
+        WallWithHole {Layer: 3} done
+        Trunk {Layer: 1} done
+        Water {Layer: 0} done
+    
 
     MovableElement {  (abstract)
         
         move()
 
         GameCharacter {  (abstract)
-            BigFish {Layer: 2}
-            SmallFish {Layer: 2}
+            BigFish {Layer: 2} done
+            SmallFish {Layer: 2} done
         }
 
         MovableObject {  (abstract)
 
             isHeavy()
 
-            Cup {Layer: 3} (Leve) 
-            Stone {Layer: 3} (Pesado)
-            Anchor {Layer: 3} (Pesado) 
-            Bomb {Layer: 3} (Leve) 
-            Trap {Layer: 1} (Pesado) 
+            Cup {Layer: 3} (Leve) done
+            Stone {Layer: 3} (Pesado) done
+            Anchor {Layer: 3} (Pesado) done
+            Bomb {Layer: 3} (Leve) done
+            Trap {Layer: 1} (Pesado) done
         }
     }
 }

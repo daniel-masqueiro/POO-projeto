@@ -2,20 +2,20 @@ package objects;
 
 import pt.iscte.poo.game.Room;
 
-public class SteelHorizontal extends GameObject {
-
-	public SteelHorizontal(Room room) {
-		super(room);
+public class Cup extends MovableObject{
+	
+	public Cup(Room room) {
+		super(room,false);
 	}
-
+	
 	@Override
 	public String getName() {
-		return "steelHorizontal";
-	}
+		return "cup";
+	}	
 
 	@Override
 	public int getLayer() {
 		return 3;
 	}
-
+	
 }

@@ -15,7 +15,7 @@ public class Wall extends GameObject {
 
 	@Override
 	public int getLayer() {
-		return 1;
+		return 3;
 	}
 
 }
