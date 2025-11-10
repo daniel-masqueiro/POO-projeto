@@ -4,7 +4,7 @@ import pt.iscte.poo.game.Room;
 
 public class Stone extends MovableObject{
 	public Stone(Room room) {
-		super(room,false);
+		super(room,true);
 	}
 	
 	@Override
