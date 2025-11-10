@@ -40,3 +40,7 @@ public abstract class GameObject implements ImageTile{
 	}
 	
 }
+
+
+
+
