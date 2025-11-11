@@ -17,5 +17,4 @@ public class SteelHorizontal extends GameObject {
 	public int getLayer() {
 		return 3;
 	}
-
 }

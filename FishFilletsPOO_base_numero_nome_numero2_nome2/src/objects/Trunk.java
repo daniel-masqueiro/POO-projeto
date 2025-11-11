@@ -16,4 +16,7 @@ public class Trunk extends GameObject{
 	public int getLayer() {
 		return 1;
 	}
+	public boolean providesSupport() {
+	    return false;
+	}
 }

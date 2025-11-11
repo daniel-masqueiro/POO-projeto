@@ -38,6 +38,9 @@ public abstract class GameObject implements ImageTile{
 	public void setRoom(Room room) {
 		this.room = room;
 	}
+	public boolean providesSupport() {
+	    return true;
+	}
 	
 }
 

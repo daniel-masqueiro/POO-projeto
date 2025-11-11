@@ -11,6 +11,7 @@ GameObject {  (abstract)
     MovableElement {  (abstract)
         
         move()
+        setFacingDirection(Direction dir)
 
         GameCharacter {  (abstract)
             BigFish {Layer: 2} done

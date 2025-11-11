@@ -2,6 +2,7 @@ package pt.iscte.poo.game;
 
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import objects.BigFish;
 import objects.GameCharacter;
 import objects.GameObject;
 import objects.HoledWall;
+import objects.MovableObject;
 import pt.iscte.poo.gui.ImageGUI;
 import pt.iscte.poo.observer.Observed;
 import pt.iscte.poo.observer.Observer;
@@ -61,9 +63,9 @@ public class GameEngine implements Observer {
 				isSmallFishTurn = !isSmallFishTurn;
 			} else {
 				Direction dir = Direction.directionFor(k);
-				
+
 				if (dir != null) {
-					
+
 					GameCharacter activeFish;
 					if (isSmallFishTurn) {
 						activeFish = SmallFish.getInstance();
@@ -95,12 +97,13 @@ public class GameEngine implements Observer {
 			if (!obj.getPosition().equals(targetPos)) {
 				continue;
 			}
-			if (obj instanceof Wall || obj instanceof SteelHorizontal || obj instanceof SteelVertical || obj instanceof GameCharacter) {
+			if (obj instanceof Wall || obj instanceof SteelHorizontal || obj instanceof SteelVertical
+					|| obj instanceof GameCharacter) {
 				return false;
 			}
-			
-			if(!isSmallFishTurn) {
-				if (obj instanceof HoledWall || obj instanceof Trunk ) {
+
+			if (!isSmallFishTurn) {
+				if (obj instanceof HoledWall || obj instanceof Trunk) {
 					return false;
 				}
 			}
@@ -108,8 +111,40 @@ public class GameEngine implements Observer {
 		return true;
 	}
 
+	private boolean isSupported(MovableObject obj) {
+	    Point2D posBelow = obj.getPosition().plus(Direction.DOWN.asVector());
+	    
+	    // Procura por QUALQUER objeto que dê suporte nessa posição
+	    for (GameObject other_obj : currentRoom.getObjects()) {
+	        
+	        // 1. O objeto está na posição de baixo?
+	        if (other_obj.getPosition().equals(posBelow)) {
+	            
+	            // 2. Se sim, ele dá suporte?
+	            if (other_obj.providesSupport()) {
+	                // Encontrámos suporte (ex: um Wall)! 
+	                return true; // Podemos parar de procurar.
+	            }
+	            // Se não dá suporte (ex: Water, Trunk), o loop continua.
+	            // Pode haver outro objeto (um Wall) na mesma posição.
+	        }
+	    }
+	    
+	    // Se o loop terminou e NÃO encontrou NADA que desse suporte
+	    return false;
+	}
+
 	private void processTick() {
 		lastTickProcessed++;
+		List<GameObject> allObjects = new ArrayList<>(currentRoom.getObjects());
+		for (GameObject obj : allObjects) {
+			if (obj instanceof MovableObject) {
+				MovableObject m_obj = (MovableObject) obj;
+				if (!isSupported(m_obj)) {
+					m_obj.move(Direction.DOWN.asVector());
+				}
+			}
+		}
 	}
 
 	public void updateGUI() {
