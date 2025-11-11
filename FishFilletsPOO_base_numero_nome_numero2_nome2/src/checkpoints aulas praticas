@@ -7,7 +7,7 @@ o Implementar o movimento dos dois peixes. feito
 ● CheckPoint 2: aula prática entre 25 e 28/nov
 o Implementar a interação de cada peixe com um objeto que pode mover e um objeto que não
 pode mover; feito
-o Implementar a gravidade nos objetos que se movem (p.e., pedra);
+o Implementar a gravidade nos objetos que se movem (p.e., pedra); feito
 o Ponderar ajustes ao diagrama de classes;
 
 ● Checkpoint 3: aula prática entre 2 e 5/dez
