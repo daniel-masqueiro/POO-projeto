@@ -88,7 +88,7 @@ public class GameEngine implements Observer {
 			processTick();
 		}
 		ImageGUI.getInstance().update();
-		ImageGUI.getInstance().setStatusMessage(isSmallFishTurn()+" | time passed: "+String.valueOf(lastTickProcessed)+" ticks"+" | number of moves made: "+String.valueOf(numberOfMoves));
+		ImageGUI.getInstance().setStatusMessage(isSmallFishTurn()+" | time passed: "+ticksToTime()+" | number of moves made: "+String.valueOf(numberOfMoves));
 	}
 
 	private boolean isMoveValid(Point2D targetPos) {
@@ -143,6 +143,12 @@ public class GameEngine implements Observer {
 			ImageGUI.getInstance().clearImages();
 			ImageGUI.getInstance().addImages(currentRoom.getObjects());
 		}
+	}
+	private String ticksToTime() {
+	    long totalSeconds = (long) lastTickProcessed / 2;
+	    long minutes = totalSeconds / 60;
+	    long remainingSeconds = totalSeconds % 60;
+	    return String.format("%dm%02ds", minutes, remainingSeconds);
 	}
 
 }
