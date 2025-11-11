@@ -29,6 +29,7 @@ public class GameEngine implements Observer {
 	private Room currentRoom;
 	private int lastTickProcessed = 0;
 	private boolean isSmallFishTurn;
+	private int numberOfMoves=0;
 
 	public GameEngine() {
 		rooms = new HashMap<String, Room>();
@@ -77,6 +78,7 @@ public class GameEngine implements Observer {
 					if (isMoveValid(targetPos)) {
 						activeFish.setFacingDirection(dir);
 						activeFish.move(dir.asVector());
+						numberOfMoves++;
 					}
 				}
 			}
@@ -86,7 +88,7 @@ public class GameEngine implements Observer {
 			processTick();
 		}
 		ImageGUI.getInstance().update();
-		ImageGUI.getInstance().setStatusMessage(isSmallFishTurn());
+		ImageGUI.getInstance().setStatusMessage(isSmallFishTurn()+" | time passed: "+String.valueOf(lastTickProcessed)+" ticks"+" | number of moves made: "+String.valueOf(numberOfMoves));
 	}
 
 	private boolean isMoveValid(Point2D targetPos) {
@@ -113,24 +115,13 @@ public class GameEngine implements Observer {
 
 	private boolean isSupported(MovableObject obj) {
 	    Point2D posBelow = obj.getPosition().plus(Direction.DOWN.asVector());
-	    
-	    // Procura por QUALQUER objeto que dê suporte nessa posição
 	    for (GameObject other_obj : currentRoom.getObjects()) {
-	        
-	        // 1. O objeto está na posição de baixo?
 	        if (other_obj.getPosition().equals(posBelow)) {
-	            
-	            // 2. Se sim, ele dá suporte?
 	            if (other_obj.providesSupport()) {
-	                // Encontrámos suporte (ex: um Wall)! 
-	                return true; // Podemos parar de procurar.
+	                return true;
 	            }
-	            // Se não dá suporte (ex: Water, Trunk), o loop continua.
-	            // Pode haver outro objeto (um Wall) na mesma posição.
 	        }
 	    }
-	    
-	    // Se o loop terminou e NÃO encontrou NADA que desse suporte
 	    return false;
 	}
 
