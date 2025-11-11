@@ -73,6 +73,7 @@ public class GameEngine implements Observer {
 
 					Point2D targetPos = activeFish.getPosition().plus(dir.asVector());
 					if (isMoveValid(targetPos)) {
+						activeFish.setFacingDirection(dir);
 						activeFish.move(dir.asVector());
 					}
 				}

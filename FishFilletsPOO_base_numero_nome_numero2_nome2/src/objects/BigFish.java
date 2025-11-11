@@ -1,9 +1,9 @@
 package objects;
 
 import pt.iscte.poo.game.Room;
+import pt.iscte.poo.utils.Direction;
 
 public class BigFish extends GameCharacter {
-
 	private static BigFish bf = new BigFish(null);
 	
 	private BigFish(Room room) {
@@ -16,8 +16,12 @@ public class BigFish extends GameCharacter {
 	
 	@Override
 	public String getName() {
-		return "bigFishLeft";
+		if (facingDirection == Direction.RIGHT) {
+            return "bigFishRight";
+        }
+        return "bigFishLeft";
 	}
+	
 
 	@Override
 	public int getLayer() {
