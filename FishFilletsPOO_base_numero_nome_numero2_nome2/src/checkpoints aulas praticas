@@ -2,11 +2,11 @@ CheckPoint 1: aula prática entre 18 e 21/nov
 o Entender a mecânica de comunicação entre o motor de jogo e a GUI; feito
 o Criar modelo da hierarquia de classes do jogo (UML); feito
 o Ler o ficheiro de configuração e representar os elementos na GUI; feito
-o Implementar o movimento dos dois peixes.
+o Implementar o movimento dos dois peixes. feito
 
 ● CheckPoint 2: aula prática entre 25 e 28/nov
 o Implementar a interação de cada peixe com um objeto que pode mover e um objeto que não
-pode mover;
+pode mover; feito
 o Implementar a gravidade nos objetos que se movem (p.e., pedra);
 o Ponderar ajustes ao diagrama de classes;
 
