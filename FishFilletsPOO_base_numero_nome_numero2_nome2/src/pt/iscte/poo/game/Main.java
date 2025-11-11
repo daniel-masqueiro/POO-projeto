@@ -7,7 +7,7 @@ public class Main {
 	public static void main(String[] args) {
 		ImageGUI gui = ImageGUI.getInstance();
 		GameEngine engine = new GameEngine();
-		gui.setStatusMessage("Good luck!");
+		gui.setStatusMessage(engine.isSmallFishTurn());
 		gui.registerObserver(engine);
 		gui.go();
 	}

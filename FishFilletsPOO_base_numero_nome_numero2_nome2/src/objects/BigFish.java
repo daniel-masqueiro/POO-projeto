@@ -23,4 +23,5 @@ public class BigFish extends GameCharacter {
 	public int getLayer() {
 		return 2;
 	}
+	
 }
