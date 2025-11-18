@@ -75,11 +75,11 @@ public class GameEngine implements Observer {
 					}
 
 					Point2D targetPos = activeFish.getPosition().plus(dir.asVector());
-					if (isMoveValid(targetPos)) {
-						activeFish.setFacingDirection(dir);
-						activeFish.move(dir.asVector());
-						numberOfMoves++;
-					}
+					if (isMoveValid(targetPos, dir)) {
+				        activeFish.setFacingDirection(dir);
+				        activeFish.move(dir.asVector());
+				        numberOfMoves++;
+				    }
 				}
 			}
 		}
@@ -91,7 +91,7 @@ public class GameEngine implements Observer {
 		ImageGUI.getInstance().setStatusMessage(isSmallFishTurn()+" | time passed: "+ticksToTime()+" | number of moves made: "+String.valueOf(numberOfMoves));
 	}
 
-	private boolean isMoveValid(Point2D targetPos) {
+	private boolean isMoveValid(Point2D targetPos, Direction dir) {
 
 		List<GameObject> allObjects = currentRoom.getObjects();
 
@@ -109,7 +109,51 @@ public class GameEngine implements Observer {
 					return false;
 				}
 			}
+			if (obj instanceof MovableObject) {
+				return pushMovable((MovableObject) obj, dir);
+	        }
 		}
+		return true;
+	}
+	private boolean pushMovable(MovableObject firstObj, Direction dir) {
+		List<MovableObject> chain=new ArrayList<>();
+		chain.add(firstObj);
+		
+		Point2D nextPos=firstObj.getPosition().plus(dir.asVector());
+		MovableObject nextObj = getMovableObjectAt(nextPos);
+		
+		while(nextObj!=null) {
+			chain.add(nextObj);
+			nextPos=nextObj.getPosition().plus(dir.asVector());
+			nextObj = getMovableObjectAt(nextPos);
+		}
+		if (isObstacle(nextPos)) return false;
+		if (isSmallFishTurn) {
+			// Regra Peixe Pequeno:
+			// 1. Só pode empurrar 1 objeto
+			if (chain.size() > 1) return false;
+			
+			// 2. O objeto tem de ser LEVE (usa o teu método isheavy())
+			if (firstObj.isheavy()) {
+				return false;
+			}
+		} 
+		else { 
+			// Regra Peixe Grande:
+			// 1. Verticalmente só empurra 1 objeto (seja leve ou pesado)
+			if ((dir == Direction.UP || dir == Direction.DOWN) && chain.size() > 1) {
+				return false;
+			}
+			// Horizontalmente empurra qualquer quantidade (já coberto pela lógica da cadeia)
+		}
+
+		// --- MOVIMENTO ---
+		// Mover todos os objetos da cadeia (do último para o primeiro)
+		for (int i = chain.size() - 1; i >= 0; i--) {
+			MovableObject obj = chain.get(i);
+			obj.move(dir.asVector());
+		}
+
 		return true;
 	}
 
@@ -149,6 +193,25 @@ public class GameEngine implements Observer {
 	    long minutes = totalSeconds / 60;
 	    long remainingSeconds = totalSeconds % 60;
 	    return String.format("%dm%02ds", minutes, remainingSeconds);
+	}
+	
+	private MovableObject getMovableObjectAt(Point2D p) {
+	    for (GameObject obj : currentRoom.getObjects()) {
+	        if (obj.getPosition().equals(p) && obj instanceof MovableObject && !(obj instanceof GameCharacter)) {
+	            return (MovableObject) obj;
+	        }
+	    }
+	    return null;
+	}
+
+	private boolean isObstacle(Point2D p) {
+	    for (GameObject obj : currentRoom.getObjects()) {
+	        if (obj.getPosition().equals(p)) {
+	            if (obj instanceof Wall || obj instanceof SteelHorizontal || obj instanceof SteelVertical) return true;
+	            if (!isSmallFishTurn && (obj instanceof HoledWall || obj instanceof Trunk)) return true;
+	        }
+	    }
+	    return false;
 	}
 
 }
