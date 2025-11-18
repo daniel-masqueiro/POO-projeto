@@ -4,7 +4,7 @@ GameObject {  (abstract)
         Wall {Layer: 3} done
         SteelHorizontal {Layer: 3} done
         SteelVertical {Layer: 3} done
-        WallWithHole {Layer: 3} done
+        WallWithHole {Layer: 3} done 
         Trunk {Layer: 1} done providesSupport()=false
         Water {Layer: 0} done providesSupport()=false
     
@@ -12,9 +12,11 @@ GameObject {  (abstract)
     MovableElement {  (abstract)
         
         move()
-        setFacingDirection(Direction dir)
 
         GameCharacter {  (abstract)
+            
+            setFacingDirection(Direction dir)
+            
             BigFish {Layer: 2} done
             SmallFish {Layer: 2} done
         }
@@ -27,7 +29,7 @@ GameObject {  (abstract)
             Stone {Layer: 3} (Pesado) done
             Anchor {Layer: 3} (Pesado) done
             Bomb {Layer: 3} (Leve) done
-            Trap {Layer: 1} (Pesado) done providesSupport()=false
+            Trap {Layer: 1} (Pesado) done 
         }
     }
 }

@@ -16,7 +16,4 @@ public class Trap extends MovableObject{
 	public int getLayer() {
 		return 1;
 	}
-	public boolean providesSupport() {
-	    return false;
-	}
 }
