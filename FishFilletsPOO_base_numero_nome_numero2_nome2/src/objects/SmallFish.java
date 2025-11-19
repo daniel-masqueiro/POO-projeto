@@ -17,6 +17,10 @@ public class SmallFish extends GameCharacter {
 	
 	@Override
 	public String getName() {
+		if(!isAlive) {
+			return "deadfish";
+		}
+		
 		if (facingDirection == Direction.RIGHT) {
             return "smallFishRight";
         }
