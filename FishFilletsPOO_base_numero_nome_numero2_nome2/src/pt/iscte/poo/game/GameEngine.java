@@ -10,6 +10,7 @@ import java.util.Map;
 import objects.SmallFish;
 import objects.SteelHorizontal;
 import objects.SteelVertical;
+import objects.Trap;
 import objects.Trunk;
 import objects.Wall;
 import objects.BigFish;
@@ -27,18 +28,21 @@ public class GameEngine implements Observer {
 
 	private Map<String, Room> rooms;
 	private Room currentRoom;
-	private int lastTickProcessed = 0;
+	private int lastTickProcessed;
 	private boolean isSmallFishTurn;
-	private int numberOfMoves = 0;
+	private int numberOfMoves;
+	private String currentLevelFile = "room0.txt";
 
 	public GameEngine() {
 		rooms = new HashMap<String, Room>();
 		loadGame();
-		currentRoom = rooms.get("room0.txt");
+		currentRoom = rooms.get(currentLevelFile);
 		updateGUI();
 		SmallFish.getInstance().setRoom(currentRoom);
 		BigFish.getInstance().setRoom(currentRoom);
 		this.isSmallFishTurn = true;
+		this.lastTickProcessed = 0;
+		this.numberOfMoves = 0;
 	}
 
 	public String isSmallFishTurn() {
@@ -57,16 +61,20 @@ public class GameEngine implements Observer {
 
 	@Override
 	public void update(Observed source) {
-
 		if (ImageGUI.getInstance().wasKeyPressed()) {
 			int k = ImageGUI.getInstance().keyPressed();
+
+			if (k == KeyEvent.VK_R) {
+				// restartLevel();
+				return;
+			}
+
 			if (k == KeyEvent.VK_SPACE) {
 				isSmallFishTurn = !isSmallFishTurn;
 			} else {
 				Direction dir = Direction.directionFor(k);
 
 				if (dir != null) {
-
 					GameCharacter activeFish;
 					if (isSmallFishTurn) {
 						activeFish = SmallFish.getInstance();
@@ -93,7 +101,6 @@ public class GameEngine implements Observer {
 	}
 
 	private boolean isMoveValid(Point2D targetPos, Direction dir) {
-
 		List<GameObject> allObjects = currentRoom.getObjects();
 
 		for (GameObject obj : allObjects) {
@@ -110,6 +117,20 @@ public class GameEngine implements Observer {
 					return false;
 				}
 			}
+			if (obj instanceof Trap) {
+				if (!isSmallFishTurn) {
+					BigFish.getInstance().setFishDeath(true);
+					BigFish.getInstance().move(dir.asVector());
+					updateGUI();
+					ImageGUI.getInstance().update();
+					ImageGUI.getInstance().showMessage("Game Over",
+							"O peixe grande morreu na armadilha! Clica OK para voltar ao início.");
+					restartLevel();
+
+					return false;
+				}
+			}
+
 			if (obj instanceof MovableObject) {
 				return pushMovable((MovableObject) obj, dir);
 			}
@@ -129,19 +150,26 @@ public class GameEngine implements Observer {
 			nextPos = nextObj.getPosition().plus(dir.asVector());
 			nextObj = getMovableObjectAt(nextPos);
 		}
+
 		if (isObstacle(nextPos))
 			return false;
+
+		GameCharacter otherFish = isSmallFishTurn ? BigFish.getInstance() : SmallFish.getInstance();
+		if (otherFish.getPosition().equals(nextPos))
+			return false;
+
 		if (isSmallFishTurn) {
 			if (chain.size() > 1)
 				return false;
 			if (firstObj.isheavy())
 				return false;
-		}else {
-			if((dir==Direction.UP || dir==Direction.DOWN) && chain.size()>1)
+		} else {
+			if ((dir == Direction.UP || dir == Direction.DOWN) && chain.size() > 1)
 				return false;
 		}
-		for(int i=chain.size()-1;i>=0;i--) {
-			MovableObject obj=chain.get(i);
+
+		for (int i = chain.size() - 1; i >= 0; i--) {
+			MovableObject obj = chain.get(i);
 			obj.move(dir.asVector());
 		}
 		return true;
@@ -162,9 +190,25 @@ public class GameEngine implements Observer {
 	private void processTick() {
 		lastTickProcessed++;
 		List<GameObject> allObjects = new ArrayList<>(currentRoom.getObjects());
+
 		for (GameObject obj : allObjects) {
 			if (obj instanceof MovableObject) {
 				MovableObject m_obj = (MovableObject) obj;
+				Point2D posBelow = m_obj.getPosition().plus(Direction.DOWN.asVector());
+
+				if (SmallFish.getInstance().getPosition().equals(posBelow)) {
+					if (m_obj.isheavy()) {
+						SmallFish.getInstance().setFishDeath(true);
+						m_obj.move(Direction.DOWN.asVector());
+						updateGUI();
+						ImageGUI.getInstance().update();
+						ImageGUI.getInstance().showMessage("Game Over",
+								"O peixe pequeno morreu! Clica OK para voltar ao início.");
+						restartLevel();
+						return;
+					}
+				}
+
 				if (!isSupported(m_obj)) {
 					m_obj.move(Direction.DOWN.asVector());
 				}
@@ -205,6 +249,10 @@ public class GameEngine implements Observer {
 			}
 		}
 		return false;
+	}
+
+	private void restartLevel() {
+
 	}
 
 }

@@ -4,6 +4,7 @@ import pt.iscte.poo.game.Room;
 import pt.iscte.poo.utils.Direction;
 
 public class BigFish extends GameCharacter {
+	
 	private static BigFish bf = new BigFish(null);
 
 	private BigFish(Room room) {
@@ -16,7 +17,7 @@ public class BigFish extends GameCharacter {
 
 	@Override
 	public String getName() {
-		if (!isAlive) {
+		if (isDead) {
 			return "deadfish";
 		}
 		if (facingDirection == Direction.RIGHT) {

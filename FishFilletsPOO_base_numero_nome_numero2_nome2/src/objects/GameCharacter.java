@@ -6,7 +6,7 @@ import pt.iscte.poo.utils.Direction;
 public abstract class GameCharacter extends MovableElement {
 
 	protected Direction facingDirection = Direction.LEFT;
-	protected boolean isAlive = true;
+	protected boolean isDead = false;
 
 	public GameCharacter(Room room) {
 		super(room);
@@ -23,9 +23,11 @@ public abstract class GameCharacter extends MovableElement {
 		}
 	}
 
-	public void setFishDeath(boolean status) {
-		if (!status)
-			this.isAlive = false;
+	public void setFishDeath(boolean isDead) {
+		this.isDead = isDead;
+	}
+	public boolean isDead() {
+		return isDead;
 	}
 
 }
