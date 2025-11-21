@@ -210,15 +210,13 @@ public class GameEngine implements Observer {
 						return;
 					}
 				}
-				GameObject objBelow=getObjectAt(posBelow);
-				if(m_obj.isheavy() && objBelow instanceof Trunk) {   //partir trunk
+				GameObject objBelow = getObjectAt(posBelow);
+				if (m_obj.isheavy() && objBelow instanceof Trunk) {//corrigir isto aula
 					currentRoom.getObjects().remove(objBelow);
-					ImageGUI.getInstance().removeImage(objBelow);
 					m_obj.move(Direction.DOWN.asVector());
 					updateGUI();
-					ImageGUI.getInstance().update();;
+					ImageGUI.getInstance().update();
 					continue;
-					
 				}
 
 				if (!isSupported(m_obj)) {
