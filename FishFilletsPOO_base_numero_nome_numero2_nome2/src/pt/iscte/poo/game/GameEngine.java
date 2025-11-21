@@ -31,9 +31,11 @@ public class GameEngine implements Observer {
 	private int lastTickProcessed;
 	private boolean isSmallFishTurn;
 	private int numberOfMoves;
-	private String currentLevelFile = "room0.txt";
+	private String currentLevelFile;
+	private int ticksAtLevelStart;
 
 	public GameEngine() {
+		this.currentLevelFile = "room0.txt";
 		rooms = new HashMap<String, Room>();
 		loadGame();
 		currentRoom = rooms.get(currentLevelFile);
@@ -43,6 +45,7 @@ public class GameEngine implements Observer {
 		this.isSmallFishTurn = true;
 		this.lastTickProcessed = 0;
 		this.numberOfMoves = 0;
+		this.ticksAtLevelStart = 0;
 	}
 
 	public String isSmallFishTurn() {
@@ -65,7 +68,7 @@ public class GameEngine implements Observer {
 			int k = ImageGUI.getInstance().keyPressed();
 
 			if (k == KeyEvent.VK_R) {
-				// restartLevel();
+				restartLevel();
 				return;
 			}
 
@@ -121,7 +124,6 @@ public class GameEngine implements Observer {
 				if (!isSmallFishTurn) {
 					BigFish.getInstance().setFishDeath(true);
 					BigFish.getInstance().move(dir.asVector());
-					updateGUI();
 					ImageGUI.getInstance().update();
 					ImageGUI.getInstance().showMessage("Game Over",
 							"O peixe grande morreu na armadilha! Clica OK para voltar ao início.");
@@ -208,12 +210,30 @@ public class GameEngine implements Observer {
 						return;
 					}
 				}
+				GameObject objBelow=getObjectAt(posBelow);
+				if(m_obj.isheavy() && objBelow instanceof Trunk) {   //partir trunk
+					currentRoom.getObjects().remove(objBelow);
+					ImageGUI.getInstance().removeImage(objBelow);
+					m_obj.move(Direction.DOWN.asVector());
+					updateGUI();
+					ImageGUI.getInstance().update();;
+					continue;
+					
+				}
 
 				if (!isSupported(m_obj)) {
 					m_obj.move(Direction.DOWN.asVector());
 				}
 			}
 		}
+	}
+
+	private GameObject getObjectAt(Point2D p) {
+		for(GameObject obj :currentRoom.getObjects()) {
+			if(obj.getPosition().equals(p))
+				return obj;
+		}
+		return null;
 	}
 
 	public void updateGUI() {
@@ -224,9 +244,12 @@ public class GameEngine implements Observer {
 	}
 
 	private String ticksToTime() {
-		long totalSeconds = (long) lastTickProcessed / 2;
+		long ticksPassadosNoNivel = lastTickProcessed - ticksAtLevelStart;
+
+		long totalSeconds = ticksPassadosNoNivel / 2;
 		long minutes = totalSeconds / 60;
 		long remainingSeconds = totalSeconds % 60;
+
 		return String.format("%dm%02ds", minutes, remainingSeconds);
 	}
 
@@ -252,6 +275,24 @@ public class GameEngine implements Observer {
 	}
 
 	private void restartLevel() {
+		File file = new File("rooms/" + currentLevelFile);
+		Room resetRoom = Room.readRoom(file, this);
+		rooms.put(currentLevelFile, resetRoom);
+		currentRoom = resetRoom;
+
+		SmallFish.getInstance().setRoom(currentRoom);
+		SmallFish.getInstance().setFishDeath(false);
+
+		BigFish.getInstance().setRoom(currentRoom);
+		BigFish.getInstance().setFishDeath(false);
+		this.isSmallFishTurn = true;
+		this.lastTickProcessed = ImageGUI.getInstance().getTicks();
+		this.numberOfMoves = 0;
+		this.ticksAtLevelStart = this.lastTickProcessed;
+
+		updateGUI();
+		ImageGUI.getInstance().update();
+		ImageGUI.getInstance().showMessage("Game Over", "Nível reiniciado");
 
 	}
 
