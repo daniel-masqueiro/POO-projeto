@@ -10,14 +10,14 @@ import java.util.Map;
 import objects.BigFish;
 import objects.GameCharacter;
 import objects.GameObject;
+import objects.Heavy;
 import objects.HoledWall;
 import objects.MovableObject;
 import objects.SmallFish;
-import objects.SteelHorizontal;
-import objects.SteelVertical;
+import objects.Solid;
+import objects.Support;
 import objects.Trap;
 import objects.Trunk;
-import objects.Wall;
 import pt.iscte.poo.gui.ImageGUI;
 import pt.iscte.poo.observer.Observed;
 import pt.iscte.poo.observer.Observer;
@@ -111,32 +111,29 @@ public class GameEngine implements Observer {
 			if (!obj.getPosition().equals(targetPos)) {
 				continue;
 			}
-			if (obj instanceof Wall || obj instanceof SteelHorizontal || obj instanceof SteelVertical
-					|| obj instanceof GameCharacter) {
+
+			if (obj instanceof GameCharacter) {
 				return false;
 			}
 
-			if (!isSmallFishTurn) {
-				if (obj instanceof HoledWall || obj instanceof Trunk) {
-					return false;
-				}
-			}
 			if (obj instanceof Trap) {
 				if (!isSmallFishTurn) {
 					BigFish.getInstance().setFishDeath(true);
 					BigFish.getInstance().move(dir.asVector());
-					updateGUI();
-					ImageGUI.getInstance().update();
-					ImageGUI.getInstance().showMessage("Game Over",
-							"O peixe grande morreu na armadilha! Clica OK para voltar ao início.");
-					restartLevel();
-
+					triggerGameOver("O peixe grande morreu na armadilha! Clica OK para voltar ao início.");
 					return false;
 				}
 			}
 
 			if (obj instanceof MovableObject) {
 				return pushMovable((MovableObject) obj, dir);
+			}
+
+			if (obj instanceof Solid && ((Solid) obj).isSolid()) {
+				if (obj instanceof HoledWall && isSmallFishTurn) {
+					continue;
+				}
+				return false;
 			}
 		}
 		return true;
@@ -155,22 +152,41 @@ public class GameEngine implements Observer {
 			nextObj = getMovableObjectAt(nextPos);
 		}
 
-		if (isObstacle(nextPos))
-			return false;
+		for (GameObject obj : currentRoom.getObjects()) {
+			if (obj.getPosition().equals(nextPos)) {
+				if (obj instanceof GameCharacter)
+					return false;
 
-		GameCharacter otherFish = isSmallFishTurn ? BigFish.getInstance() : SmallFish.getInstance();
-		if (otherFish.getPosition().equals(nextPos))
-			return false;
+				if (obj instanceof Solid && ((Solid) obj).isSolid()) {
+					if (obj instanceof MovableObject)
+						continue;
 
-		if (isSmallFishTurn) {
-			if (chain.size() > 1) {
-				return false;
+					if (obj instanceof HoledWall && isSmallFishTurn) {
+						continue;
+					}
+					return false;
+				}
 			}
-			if (firstObj.isheavy())
-				return false;
-		} else {
-			if ((dir == Direction.UP || dir == Direction.DOWN) && chain.size() > 1)
-				return false;
+		}
+
+		GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
+
+		if (chain.size() > activeFish.getPushLimit()) {
+			activeFish.setFishDeath(true);
+			triggerGameOver("Esforço excessivo! Morreu a empurrar demasiados objetos.");
+			return false;
+		}
+
+		boolean hasHeavy = false;
+		for (MovableObject o : chain) {
+			if (o instanceof Heavy && ((Heavy) o).isHeavy()) {
+				hasHeavy = true;
+				break;
+			}
+		}
+
+		if (hasHeavy && !activeFish.canPushHeavy()) {
+			return false;
 		}
 
 		for (int i = chain.size() - 1; i >= 0; i--) {
@@ -184,7 +200,7 @@ public class GameEngine implements Observer {
 		Point2D posBelow = obj.getPosition().plus(Direction.DOWN.asVector());
 		for (GameObject other_obj : currentRoom.getObjects()) {
 			if (other_obj.getPosition().equals(posBelow)) {
-				if (other_obj.providesSupport()) {
+				if (other_obj instanceof Support && ((Support) other_obj).isSupport()) {
 					return true;
 				}
 			}
@@ -201,6 +217,21 @@ public class GameEngine implements Observer {
 				MovableObject m_obj = (MovableObject) obj;
 				Point2D posBelow = m_obj.getPosition().plus(Direction.DOWN.asVector());
 
+				if (SmallFish.getInstance().getPosition().equals(posBelow)) {
+					if (m_obj instanceof Heavy && ((Heavy) m_obj).isHeavy()) {
+						SmallFish.getInstance().setFishDeath(true);
+						m_obj.move(Direction.DOWN.asVector());
+						triggerGameOver("O peixe pequeno morreu esmagado! Clica OK para voltar ao início.");
+						return;
+					} else {
+						continue;
+					}
+				}
+
+				if (BigFish.getInstance().getPosition().equals(posBelow)) {
+					continue;
+				}
+
 				Trunk trunkBelow = null;
 				for (GameObject t : currentRoom.getObjects()) {
 					if (t instanceof Trunk && t.getPosition().equals(posBelow)) {
@@ -209,7 +240,7 @@ public class GameEngine implements Observer {
 					}
 				}
 
-				if (m_obj.isheavy() && trunkBelow != null) {
+				if ((m_obj instanceof Heavy && ((Heavy) m_obj).isHeavy()) && trunkBelow != null) {
 					currentRoom.getObjects().remove(trunkBelow);
 					m_obj.move(Direction.DOWN.asVector());
 					updateGUI();
@@ -222,58 +253,49 @@ public class GameEngine implements Observer {
 				}
 			}
 		}
-		//morte dos peixes por esforço
-		List<MovableObject> smallFishStack = new ArrayList<>();
-		Point2D pos = SmallFish.getInstance().getPosition().plus(Direction.UP.asVector());
+
+		validateStackDeath(SmallFish.getInstance());
+		validateStackDeath(BigFish.getInstance());
+	}
+
+	private void validateStackDeath(GameCharacter fish) {
+		List<MovableObject> stack = new ArrayList<>();
+		Point2D pos = fish.getPosition().plus(Direction.UP.asVector());
 		while (true) {
 			MovableObject obj = getMovableObjectAt(pos);
 			if (obj == null)
 				break;
-			smallFishStack.add(obj);
+			stack.add(obj);
 			pos = pos.plus(Direction.UP.asVector());
 		}
 
-		if (smallFishStack.size() > 1 || (smallFishStack.size() == 1 && smallFishStack.get(0).isheavy())) {
-			SmallFish.getInstance().setFishDeath(true);
-			updateGUI();
-			ImageGUI.getInstance().update();
-			ImageGUI.getInstance().showMessage("Game Over",
-					"O peixe pequeno morreu de esforço! Clica OK para reiniciar.");
-			restartLevel();
+		if (stack.isEmpty())
 			return;
-		}
-
-		List<MovableObject> bigFishStack = new ArrayList<>();
-		pos = BigFish.getInstance().getPosition().plus(Direction.UP.asVector());
-		while (true) {
-			MovableObject obj = getMovableObjectAt(pos);
-			if (obj == null)
-				break;
-			bigFishStack.add(obj);
-			pos = pos.plus(Direction.UP.asVector());
-		}
 
 		int heavyCount = 0;
-		for (MovableObject o : bigFishStack) {
-			if (o.isheavy())
+		for (MovableObject o : stack) {
+			if (o instanceof Heavy && ((Heavy) o).isHeavy())
 				heavyCount++;
 		}
 
-		boolean bigFishDies = false;
-		if (heavyCount > 1)
-			bigFishDies = true;
-		else if (heavyCount == 1 && bigFishStack.size() > 1)
-			bigFishDies = true;
-		else if (heavyCount == 0 && bigFishStack.size() > 4)
-			bigFishDies = true;
+		boolean dies = false;
 
-		if (bigFishDies) {
-			BigFish.getInstance().setFishDeath(true);
-			updateGUI();
-			ImageGUI.getInstance().update();
-			ImageGUI.getInstance().showMessage("Game Over",
-					"O peixe grande morreu de esforço! Clica OK para reiniciar.");
-			restartLevel();
+		if (stack.size() > fish.getSupportLimit())
+			dies = true;
+
+		if (heavyCount > 0 && !fish.canSupportHeavy())
+			dies = true;
+
+		if (fish.canSupportHeavy()) {
+			if (heavyCount > 1)
+				dies = true;
+			if (heavyCount == 1 && stack.size() > 1)
+				dies = true;
+		}
+
+		if (dies) {
+			fish.setFishDeath(true);
+			triggerGameOver("O " + fish.getName() + " morreu esmagado pela carga!");
 		}
 	}
 
@@ -301,16 +323,11 @@ public class GameEngine implements Observer {
 		return null;
 	}
 
-	private boolean isObstacle(Point2D p) {
-		for (GameObject obj : currentRoom.getObjects()) {
-			if (obj.getPosition().equals(p)) {
-				if (obj instanceof Wall || obj instanceof SteelHorizontal || obj instanceof SteelVertical)
-					return true;
-				if (!isSmallFishTurn && (obj instanceof HoledWall || obj instanceof Trunk))
-					return true;
-			}
-		}
-		return false;
+	private void triggerGameOver(String message) {
+		updateGUI();
+		ImageGUI.getInstance().update();
+		ImageGUI.getInstance().showMessage("Game Over", message);
+		restartLevel();
 	}
 
 	private void restartLevel() {

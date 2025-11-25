@@ -1,35 +1,44 @@
-GameObject {  (abstract)
-		providesSupport()=true
-		
-        Wall {Layer: 3} done
-        SteelHorizontal {Layer: 3} done
-        SteelVertical {Layer: 3} done
-        WallWithHole {Layer: 3} done 
-        Trunk {Layer: 1} done providesSupport()=false
-        Water {Layer: 0} done providesSupport()=false
-    
+<<Interfaces>>
+    Solid   { boolean isSolid() }
+    Support { boolean isSupport() }
+    Heavy   { boolean isHeavy() }
+	PushAgent { int getPushLimit();boolean canPushHeavy();int getSupportLimit();boolean canSupportHeavy() }
+	
+GameObject { (abstract) implements Solid, Support
+    (Configuração base: Solid=true, Support=true)
 
-    MovableElement {  (abstract)
-        
+    Wall {Layer: 3}
+    SteelHorizontal {Layer: 3}
+    SteelVertical {Layer: 3}
+    WallWithHole {Layer: 3} (Solid=true*, Support=true) 
+        *Nota: É sólido, o GameEngine trata a exceção do Peixe Pequeno.
+    
+    Trunk {Layer: 1} (Solid=true, Support=false)
+    Water {Layer: 0} (Solid=false, Support=false)
+
+    MovableElement { (abstract)
         move()
 
-        GameCharacter {  (abstract)
+        GameCharacter { (abstract)
+            (Configuração: Solid=true, Support=false)
             
+            validatePush(List<MovableObject> chain)
             setFacingDirection(Direction dir)
-            
-            BigFish {Layer: 2} done
-            SmallFish {Layer: 2} done
+
+            BigFish {Layer: 2} (Regra: Max 4 leves ou 1 pesado)
+            SmallFish {Layer: 2} (Regra: Max 1 leve)
         }
 
-        MovableObject {  (abstract)
+        MovableObject { (abstract) implements Heavy
+            (Configuração base: Solid=true, Support=true)
 
-            isHeavy()
-
-            Cup {Layer: 3} (Leve) done
-            Stone {Layer: 3} (Pesado) done
-            Anchor {Layer: 3} (Pesado) done
-            Bomb {Layer: 3} (Leve) done
-            Trap {Layer: 1} (Pesado) done 
+            Cup {Layer: 3} (Heavy=false)
+            Bomb {Layer: 3} (Heavy=false)
+            
+            Stone {Layer: 3} (Heavy=true)
+            Anchor {Layer: 3} (Heavy=true)
+            
+            Trap {Layer: 1} (Heavy=true, Solid=false, Support=true)
         }
     }
 }

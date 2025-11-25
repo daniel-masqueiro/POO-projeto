@@ -7,22 +7,13 @@ public class BigFish extends GameCharacter {
 	
 	private static BigFish bf = new BigFish(null);
 
-	private BigFish(Room room) {
-		super(room);
-	}
-
-	public static BigFish getInstance() {
-		return bf;
-	}
+	private BigFish(Room room) { super(room); }
+	public static BigFish getInstance() { return bf; }
 
 	@Override
 	public String getName() {
-		if (isDead) {
-			return "deadfish";
-		}
-		if (facingDirection == Direction.RIGHT) {
-			return "bigFishRight";
-		}
+		if (isDead) return "deadfish";
+		if (facingDirection == Direction.RIGHT) return "bigFishRight";
 		return "bigFishLeft";
 	}
 
@@ -31,4 +22,23 @@ public class BigFish extends GameCharacter {
 		return 2;
 	}
 
+	@Override
+	public int getPushLimit() { 
+		return 10;
+	}
+
+	@Override
+	public boolean canPushHeavy() { 
+		return true;
+	}
+
+	@Override
+	public int getSupportLimit() { 
+		return 4;
+	}
+
+	@Override
+	public boolean canSupportHeavy() { 
+		return true;
+	}
 }

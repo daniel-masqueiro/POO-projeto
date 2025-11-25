@@ -4,18 +4,32 @@ import pt.iscte.poo.game.Room;
 import pt.iscte.poo.gui.ImageTile;
 import pt.iscte.poo.utils.Point2D;
 
-public abstract class GameObject implements ImageTile{
+public abstract class GameObject implements ImageTile, Solid, Support {
 	
 	private Point2D position;
 	private Room room;
+	private boolean isSolid;
+	private boolean isSupport;
 	
-	public GameObject(Room room) {
+	public GameObject(Room room, boolean isSolid, boolean isSupport) {
 		this.room = room;
+		this.isSolid = isSolid;
+		this.isSupport = isSupport;
 	}
-	
-	public GameObject(Point2D position, Room room) {
+	public GameObject(Point2D position, Room room, boolean isSolid, boolean isSupport) {
 		this.position = position;
 		this.room = room;
+		this.isSolid = isSolid;
+		this.isSupport = isSupport;
+	}
+	@Override
+	public boolean isSolid() {
+		return isSolid;
+	}
+
+	@Override
+	public boolean isSupport() {
+		return isSupport;
 	}
 
 	public void setPosition(int i, int j) {
@@ -38,12 +52,4 @@ public abstract class GameObject implements ImageTile{
 	public void setRoom(Room room) {
 		this.room = room;
 	}
-	public boolean providesSupport() {
-	    return true;
-	}
-	
 }
-
-
-
-
