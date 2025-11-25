@@ -152,6 +152,7 @@ public class GameEngine implements Observer {
 			nextObj = getMovableObjectAt(nextPos);
 		}
 
+		// CORREÇÃO: Verificar TODOS os objetos na posição final para encontrar bloqueios
 		for (GameObject obj : currentRoom.getObjects()) {
 			if (obj.getPosition().equals(nextPos)) {
 				if (obj instanceof GameCharacter)
@@ -159,21 +160,20 @@ public class GameEngine implements Observer {
 
 				if (obj instanceof Solid && ((Solid) obj).isSolid()) {
 					if (obj instanceof MovableObject)
-						continue;
+						continue; // Ignora o objeto que estamos a empurrar (já está na chain)
 
 					if (obj instanceof HoledWall && isSmallFishTurn) {
 						continue;
 					}
-					return false;
+					return false; // Encontrou parede ou obstáculo sólido -> Bloqueia
 				}
 			}
 		}
 
 		GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
 
+		// Regra: Se excede o limite, APENAS BLOQUEIA (return false), NÃO MATA.
 		if (chain.size() > activeFish.getPushLimit()) {
-			activeFish.setFishDeath(true);
-			triggerGameOver("Esforço excessivo! Morreu a empurrar demasiados objetos.");
 			return false;
 		}
 
