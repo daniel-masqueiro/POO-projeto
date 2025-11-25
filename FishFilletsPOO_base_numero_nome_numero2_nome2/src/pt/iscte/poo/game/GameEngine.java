@@ -210,9 +210,34 @@ public class GameEngine implements Observer {
 						return;
 					}
 				}
-				GameObject objBelow = getObjectAt(posBelow);
-				if (m_obj.isheavy() && objBelow instanceof Trunk) {//corrigir isto aula
-					currentRoom.getObjects().remove(objBelow);
+
+				if (BigFish.getInstance().getPosition().equals(posBelow)) {
+					if (m_obj.isheavy()) {
+						Point2D posAbove = m_obj.getPosition().plus(Direction.UP.asVector());
+						MovableObject objOnTop = getMovableObjectAt(posAbove);
+
+						if (objOnTop != null && objOnTop.isheavy()) {
+							BigFish.getInstance().setFishDeath(true);
+							updateGUI();
+							ImageGUI.getInstance().update();
+							ImageGUI.getInstance().showMessage("Game Over",
+									"O peixe grande foi esmagado! Clica OK para voltar ao início.");
+							restartLevel();
+							return;
+						}
+					}
+				}
+
+				Trunk trunkBelow = null;
+				for (GameObject t : currentRoom.getObjects()) {
+					if (t instanceof Trunk && t.getPosition().equals(posBelow)) {
+						trunkBelow = (Trunk) t;
+						break;
+					}
+				}
+
+				if (m_obj.isheavy() && trunkBelow != null) {
+					currentRoom.getObjects().remove(trunkBelow);
 					m_obj.move(Direction.DOWN.asVector());
 					updateGUI();
 					ImageGUI.getInstance().update();
@@ -224,14 +249,6 @@ public class GameEngine implements Observer {
 				}
 			}
 		}
-	}
-
-	private GameObject getObjectAt(Point2D p) {
-		for(GameObject obj :currentRoom.getObjects()) {
-			if(obj.getPosition().equals(p))
-				return obj;
-		}
-		return null;
 	}
 
 	public void updateGUI() {
