@@ -29,389 +29,399 @@ import pt.iscte.poo.utils.Point2D;
 
 public class GameEngine implements Observer {
 
-    private Map<String, Room> rooms;
-    private Room currentRoom;
-
-    private int lastTickProcessed;
-    private boolean isSmallFishTurn;
-    private int numberOfMoves;
-
-    private String currentLevelFile;
-    private int ticksAtLevelStart;
-    private int numberFish;
-
-    public GameEngine() {
-        this.currentLevelFile = "room0.txt";
-        this.rooms = new HashMap<>();
-
-        loadGame();
-        currentRoom = rooms.get(currentLevelFile);
-
-        updateGUI();
-
-        SmallFish.getInstance().setRoom(currentRoom);
-        BigFish.getInstance().setRoom(currentRoom);
-
-        this.isSmallFishTurn = true;
-        this.lastTickProcessed = 0;
-        this.numberOfMoves = 0;
-        this.ticksAtLevelStart = 0;
-        this.numberFish = 2;
-    }
-
-    public String isSmallFishTurn() {
-        return isSmallFishTurn ? "SmallFish turn" : "BigFish turn";
-    }
-
-    private void loadGame() {
-        File[] files = new File("./rooms").listFiles();
-
-        if (files != null) {
-            for (File f : files) {
-                rooms.put(f.getName(), Room.readRoom(f, this));
-            }
-        }
-    }
-
-    @Override
-    public void update(Observed source) {
-
-        if (ImageGUI.getInstance().wasKeyPressed()) {
-            int k = ImageGUI.getInstance().keyPressed();
-
-            if (k == KeyEvent.VK_R) {
-                restartLevel();
-                return;
-            }
-
-            if (k == KeyEvent.VK_SPACE && numberFish > 1) {
-                isSmallFishTurn = !isSmallFishTurn;
-            } else {
-                Direction dir = Direction.directionFor(k);
-
-                if (dir != null) {
-                    GameCharacter activeFish = isSmallFishTurn ?
-                            SmallFish.getInstance() : BigFish.getInstance();
-
-                    Point2D targetPos = activeFish.getPosition().plus(dir.asVector());
-
-                    if (isMoveValid(targetPos, dir)) {
-                        activeFish.setFacingDirection(dir);
-                        activeFish.move(dir.asVector());
-
-                        if (!ImageGUI.getInstance().isWithinBounds(activeFish.getPosition())) {
-                            numberFish--;
-                            isSmallFishTurn = !isSmallFishTurn;
-                        }
-
-                        numberOfMoves++;
-                    }
-                }
-            }
-        }
+	private Map<String, Room> rooms;
+	private Room currentRoom;
+
+	private int lastTickProcessed;
+	private boolean isSmallFishTurn;
+	private int numberOfMoves;
+	private String currentLevelFile;
+	private int ticksAtLevelStart;
+	private int numberFish;
+
+	public GameEngine() {
+		this.currentLevelFile = "room0.txt";
+		this.rooms = new HashMap<>();
+
+		loadGame();
+		currentRoom = rooms.get(currentLevelFile);
+
+		updateGUI();
+
+		SmallFish.getInstance().setRoom(currentRoom);
+		BigFish.getInstance().setRoom(currentRoom);
+
+		this.isSmallFishTurn = true;
+		this.lastTickProcessed = 0;
+		this.numberOfMoves = 0;
+		this.ticksAtLevelStart = 0;
+		this.numberFish = 2;
+	}
+
+	public String isSmallFishTurn() {
+		return isSmallFishTurn ? "SmallFish turn" : "BigFish turn";
+	}
+
+	private void loadGame() {
+		File[] files = new File("./rooms").listFiles();
+
+		if (files != null) {
+			for (File f : files) {
+				rooms.put(f.getName(), Room.readRoom(f, this));
+			}
+		}
+	}
+
+	@Override
+	public void update(Observed source) {
+
+		if (ImageGUI.getInstance().wasKeyPressed()) {
+			int k = ImageGUI.getInstance().keyPressed();
+
+			if (k == KeyEvent.VK_R) {
+				restartLevel();
+				ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
+				return;
+			}
+
+			if (k == KeyEvent.VK_SPACE && numberFish > 1) {
+				isSmallFishTurn = !isSmallFishTurn;
+			} else {
+				Direction dir = Direction.directionFor(k);
+
+				if (dir != null) {
+					GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
+
+					Point2D targetPos = activeFish.getPosition().plus(dir.asVector());
+
+					if (isMoveValid(targetPos, dir)) {
+						activeFish.setFacingDirection(dir);
+						activeFish.move(dir.asVector());
+
+						if (!ImageGUI.getInstance().isWithinBounds(activeFish.getPosition())) {
+							numberFish--;
+							currentRoom.removeObject(activeFish);
+							isSmallFishTurn = !isSmallFishTurn;
+							if (numberFish == 0) {
+								loadNextLevel();
+							}
+						}
+
+						numberOfMoves++;
+					}
+				}
+			}
+		}
+
+		int t = ImageGUI.getInstance().getTicks();
+		while (lastTickProcessed < t) {
+			processTick();
+		}
+
+		ImageGUI.getInstance().update();
+		ImageGUI.getInstance().setStatusMessage(
+				isSmallFishTurn() + " | time passed: " + ticksToTime() + " | number of moves made: " + numberOfMoves);
+	}
+
+	private void loadNextLevel() {
+		String numberStr = currentLevelFile.replaceAll("\\D+", "");
+		int nextNum = Integer.parseInt(numberStr) + 1;
+		String nextLevelFile = "room" + nextNum + ".txt";
+
+		File nextFile = new File("rooms/" + nextLevelFile);
+
+		if (nextFile.exists()) {
+			currentLevelFile = nextLevelFile;
+			restartLevel();
+			ImageGUI.getInstance().showMessage("Nível Concluído!", "A carregar o nivel " + nextNum + "...");
+		} else {
+			ImageGUI.getInstance().showMessage("Vitoria!", "kazzio");
+		}
+	}
 
-        int t = ImageGUI.getInstance().getTicks();
-        while (lastTickProcessed < t) {
-            processTick();
-        }
-
-        ImageGUI.getInstance().update();
-        ImageGUI.getInstance().setStatusMessage(
-                isSmallFishTurn() + " | time passed: " + ticksToTime()
-                        + " | number of moves made: " + numberOfMoves
-        );
-    }
-
-    private boolean isMoveValid(Point2D targetPos, Direction dir) {
-
-        for (GameObject obj : currentRoom.getObjects()) {
-
-            if (!obj.getPosition().equals(targetPos))
-                continue;
-
-            if (obj instanceof GameCharacter)
-                return false;
-
-            if (obj instanceof Trap) {
-                if (!isSmallFishTurn) {
-                    BigFish.getInstance().setFishDeath(true);
-                    BigFish.getInstance().move(dir.asVector());
-                    triggerGameOver("O peixe grande morreu na armadilha! Clica OK para voltar ao início.");
-                    return false;
-                }
-            }
-
-            if (obj instanceof MovableObject)
-                return pushMovable((MovableObject) obj, dir);
-
-            if (obj instanceof Solid && ((Solid) obj).isSolid()) {
-                if (obj instanceof HoledWall && isSmallFishTurn)
-                    continue;
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private boolean pushMovable(MovableObject firstObj, Direction dir) {
-
-        List<MovableObject> chain = new ArrayList<>();
-        chain.add(firstObj);
-
-        Point2D nextPos = firstObj.getPosition().plus(dir.asVector());
-        MovableObject nextObj = getMovableObjectAt(nextPos);
-
-        // Build push chain
-        while (nextObj != null) {
-            chain.add(nextObj);
-            nextPos = nextObj.getPosition().plus(dir.asVector());
-            nextObj = getMovableObjectAt(nextPos);
-        }
-
-        for (GameObject obj : currentRoom.getObjects()) {
-            if (!obj.getPosition().equals(nextPos))
-                continue;
-
-            if (obj instanceof GameCharacter)
-                return false;
-
-            if (obj instanceof Solid && ((Solid) obj).isSolid()) {
-                if (obj instanceof MovableObject)
-                    continue;
-                if (obj instanceof HoledWall && isSmallFishTurn)
-                    continue;
-
-                return false;
-            }
-        }
-
-        GameCharacter activeFish =
-                isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
-
-        if (chain.size() > activeFish.getPushLimit())
-            return false;
-
-        boolean hasHeavy = chain.stream().anyMatch(
-                o -> o instanceof Heavy && ((Heavy) o).isHeavy()
-        );
-
-        if (hasHeavy && !activeFish.canPushHeavy())
-            return false;
-
-        for (int i = chain.size() - 1; i >= 0; i--) {
-            chain.get(i).move(dir.asVector());
-        }
-
-        return true;
-    }
-
-    private boolean isSupported(MovableObject obj) {
-        Point2D posBelow = obj.getPosition().plus(Direction.DOWN.asVector());
-
-        for (GameObject other : currentRoom.getObjects()) {
-            if (other.getPosition().equals(posBelow) &&
-                other instanceof Support &&
-                ((Support) other).isSupport()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void processTick() {
-        lastTickProcessed++;
-
-        List<GameObject> allObjects = new ArrayList<>(currentRoom.getObjects());
-
-        for (GameObject obj : allObjects) {
-
-            if (!(obj instanceof MovableObject))
-                continue;
-
-            MovableObject m = (MovableObject) obj;
-            Point2D posBelow = m.getPosition().plus(Direction.DOWN.asVector());
-
-            if (SmallFish.getInstance().getPosition().equals(posBelow)) {
-                if (m instanceof Heavy && ((Heavy) m).isHeavy()) {
-                    SmallFish.getInstance().setFishDeath(true);
-                    m.move(Direction.DOWN.asVector());
-                    triggerGameOver("O peixe pequeno morreu esmagado! Clica OK para voltar ao início.");
-                    return;
-                }
-                continue;
-            }
-
-            if (BigFish.getInstance().getPosition().equals(posBelow))
-                continue;
-
-            Trunk trunkBelow = null;
-            for (GameObject t : currentRoom.getObjects()) {
-                if (t instanceof Trunk && t.getPosition().equals(posBelow)) {
-                    trunkBelow = (Trunk) t;
-                    break;
-                }
-            }
-
-            if (m instanceof Heavy && ((Heavy) m).isHeavy() && trunkBelow != null) {
-                currentRoom.getObjects().remove(trunkBelow);
-                m.move(Direction.DOWN.asVector());
-                updateGUI();
-                ImageGUI.getInstance().update();
-                continue;
-            }
-
-            if (!isSupported(m)) {
-                m.move(Direction.DOWN.asVector());
-
-                if (m instanceof Bomb && isSupported(m)) {
-                    explosion(m.getPosition());
-                    return;
-                }
-            }
-        }
-
-        validateStackDeath(SmallFish.getInstance());
-        validateStackDeath(BigFish.getInstance());
-    }
-
-    private void explosion(Point2D center) {
-
-        List<Point2D> zone = center.getNeighbourhoodPoints();
-        zone.add(center);
-
-        List<GameObject> toRemove = new ArrayList<>();
-        boolean fishDied = false;
-
-        for (Point2D p : zone) {
-            if (SmallFish.getInstance().getPosition().equals(p)) {
-                SmallFish.getInstance().setFishDeath(true);
-                fishDied = true;
-            }
-            if (BigFish.getInstance().getPosition().equals(p)) {
-                BigFish.getInstance().setFishDeath(true);
-                fishDied = true;
-            }
-        }
-
-        for (GameObject obj : currentRoom.getObjects()) {
-            if (!(obj instanceof GameCharacter) &&
-                zone.contains(obj.getPosition())) {
-                toRemove.add(obj);
-            }
-        }
-
-        currentRoom.getObjects().removeAll(toRemove);
-
-        for (Point2D p : zone) {
-            Water water = new Water(currentRoom);
-            water.setPosition(p);
-            currentRoom.getObjects().add(water);
-        }
-
-        updateGUI();
-        ImageGUI.getInstance().update();
-
-        if (fishDied)
-            triggerGameOver("O peixe explodiu. Clica OK para reiniciar.");
-    }
-
-    private void validateStackDeath(GameCharacter fish) {
-
-        List<MovableObject> stack = new ArrayList<>();
-        Point2D pos = fish.getPosition().plus(Direction.UP.asVector());
-
-        while (true) {
-            MovableObject obj = getMovableObjectAt(pos);
-            if (obj == null)
-                break;
-            stack.add(obj);
-            pos = pos.plus(Direction.UP.asVector());
-        }
-
-        if (stack.isEmpty())
-            return;
-
-        int heavyCount = (int) stack.stream()
-                .filter(o -> o instanceof Heavy && ((Heavy) o).isHeavy())
-                .count();
-
-        boolean dies = false;
-
-        if (stack.size() > fish.getSupportLimit())
-            dies = true;
-
-        if (heavyCount > 0 && !fish.canSupportHeavy())
-            dies = true;
-
-        if (fish.canSupportHeavy()) {
-            if (heavyCount > 1)
-                dies = true;
-            if (heavyCount == 1 && stack.size() > 1)
-                dies = true;
-        }
-
-        if (dies) {
-            fish.setFishDeath(true);
-            triggerGameOver("O " + fish.getName() + " morreu esmagado pela carga!");
-        }
-    }
-
-    public void updateGUI() {
-        if (currentRoom != null) {
-            ImageGUI.getInstance().clearImages();
-            ImageGUI.getInstance().addImages(currentRoom.getObjects());
-        }
-    }
-
-    private String ticksToTime() {
-        long ticks = lastTickProcessed - ticksAtLevelStart;
-        long totalSeconds = ticks / 2;
-        long minutes = totalSeconds / 60;
-        long sec = totalSeconds % 60;
-        return String.format("%dm%02ds", minutes, sec);
-    }
-
-    private MovableObject getMovableObjectAt(Point2D p) {
-        for (GameObject obj : currentRoom.getObjects()) {
-            if (obj.getPosition().equals(p) &&
-                    obj instanceof MovableObject &&
-                    !(obj instanceof GameCharacter)) {
-                return (MovableObject) obj;
-            }
-        }
-        return null;
-    }
-
-    private void triggerGameOver(String message) {
-        updateGUI();
-        ImageGUI.getInstance().update();
-        ImageGUI.getInstance().showMessage("Game Over", message);
-        restartLevel();
-    }
-
-    private void restartLevel() {
-
-        File file = new File("rooms/" + currentLevelFile);
-
-        Room resetRoom = Room.readRoom(file, this);
-        rooms.put(currentLevelFile, resetRoom);
-        currentRoom = resetRoom;
-
-        SmallFish.getInstance().setRoom(currentRoom);
-        SmallFish.getInstance().setFishDeath(false);
-
-        BigFish.getInstance().setRoom(currentRoom);
-        BigFish.getInstance().setFishDeath(false);
-
-        this.isSmallFishTurn = true;
-        this.lastTickProcessed = ImageGUI.getInstance().getTicks();
-        this.numberOfMoves = 0;
-        this.ticksAtLevelStart = lastTickProcessed;
-
-        updateGUI();
-        ImageGUI.getInstance().update();
-
-        ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
-    }
+	private boolean isMoveValid(Point2D targetPos, Direction dir) {
+
+		for (GameObject obj : currentRoom.getObjects()) {
+
+			if (!obj.getPosition().equals(targetPos))
+				continue;
+
+			if (obj instanceof GameCharacter)
+				return false;
+
+			if (obj instanceof Trap) {
+				if (!isSmallFishTurn) {
+					BigFish.getInstance().setFishDeath(true);
+					BigFish.getInstance().move(dir.asVector());
+					triggerGameOver("O peixe grande morreu na armadilha! Clica OK para voltar ao início.");
+					ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
+					return false;
+				}
+			}
+
+			if (obj instanceof MovableObject)
+				return pushMovable((MovableObject) obj, dir);
+
+			if (obj instanceof Solid && ((Solid) obj).isSolid()) {
+				if (obj instanceof HoledWall && isSmallFishTurn)
+					continue;
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private boolean pushMovable(MovableObject firstObj, Direction dir) {
+
+		List<MovableObject> chain = new ArrayList<>();
+		chain.add(firstObj);
+
+		Point2D nextPos = firstObj.getPosition().plus(dir.asVector());
+		MovableObject nextObj = getMovableObjectAt(nextPos);
+
+		while (nextObj != null) {
+			chain.add(nextObj);
+			nextPos = nextObj.getPosition().plus(dir.asVector());
+			nextObj = getMovableObjectAt(nextPos);
+		}
+
+		for (GameObject obj : currentRoom.getObjects()) {
+			if (!obj.getPosition().equals(nextPos))
+				continue;
+
+			if (obj instanceof GameCharacter)
+				return false;
+
+			if (obj instanceof Solid && ((Solid) obj).isSolid()) {
+				if (obj instanceof MovableObject)
+					continue;
+				if (obj instanceof HoledWall && isSmallFishTurn)
+					continue;
+
+				return false;
+			}
+		}
+
+		GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
+
+		if (chain.size() > activeFish.getPushLimit())
+			return false;
+
+		boolean hasHeavy = chain.stream().anyMatch(o -> o instanceof Heavy && ((Heavy) o).isHeavy());
+
+		if (hasHeavy && !activeFish.canPushHeavy())
+			return false;
+
+		for (int i = chain.size() - 1; i >= 0; i--) {
+			chain.get(i).move(dir.asVector());
+		}
+
+		return true;
+	}
+
+	private boolean isSupported(MovableObject obj) {
+		Point2D posBelow = obj.getPosition().plus(Direction.DOWN.asVector());
+
+		for (GameObject other : currentRoom.getObjects()) {
+			if (other.getPosition().equals(posBelow) && other instanceof Support && ((Support) other).isSupport()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void processTick() {
+		lastTickProcessed++;
+
+		List<GameObject> allObjects = new ArrayList<>(currentRoom.getObjects());
+
+		for (GameObject obj : allObjects) {
+
+			if (!(obj instanceof MovableObject))
+				continue;
+
+			MovableObject m = (MovableObject) obj;
+			Point2D posBelow = m.getPosition().plus(Direction.DOWN.asVector());
+
+			if (SmallFish.getInstance().getPosition().equals(posBelow)) {
+				if (m instanceof Heavy && ((Heavy) m).isHeavy()) {
+					SmallFish.getInstance().setFishDeath(true);
+					m.move(Direction.DOWN.asVector());
+					triggerGameOver("O peixe pequeno morreu esmagado! Clica OK para voltar ao início.");
+					ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
+					return;
+				}
+				continue;
+			}
+
+			if (BigFish.getInstance().getPosition().equals(posBelow))
+				continue;
+
+			Trunk trunkBelow = null;
+			for (GameObject t : currentRoom.getObjects()) {
+				if (t instanceof Trunk && t.getPosition().equals(posBelow)) {
+					trunkBelow = (Trunk) t;
+					break;
+				}
+			}
+
+			if (m instanceof Heavy && ((Heavy) m).isHeavy() && trunkBelow != null) {
+				currentRoom.getObjects().remove(trunkBelow);
+				m.move(Direction.DOWN.asVector());
+				updateGUI();
+				ImageGUI.getInstance().update();
+				continue;
+			}
+
+			if (!isSupported(m)) {
+				m.move(Direction.DOWN.asVector());
+
+				if (m instanceof Bomb && isSupported(m)) {
+					explosion(m.getPosition());
+					return;
+				}
+			}
+		}
+
+		validateStackDeath(SmallFish.getInstance());
+		validateStackDeath(BigFish.getInstance());
+	}
+
+	private void explosion(Point2D center) {
+
+		List<Point2D> zone = center.getNeighbourhoodPoints();
+		zone.add(center);
+
+		List<GameObject> toRemove = new ArrayList<>();
+		boolean fishDied = false;
+
+		for (Point2D p : zone) {
+			if (SmallFish.getInstance().getPosition().equals(p)) {
+				SmallFish.getInstance().setFishDeath(true);
+				fishDied = true;
+			}
+			if (BigFish.getInstance().getPosition().equals(p)) {
+				BigFish.getInstance().setFishDeath(true);
+				fishDied = true;
+			}
+		}
+
+		for (GameObject obj : currentRoom.getObjects()) {
+			if (!(obj instanceof GameCharacter) && zone.contains(obj.getPosition())) {
+				toRemove.add(obj);
+			}
+		}
+
+		currentRoom.getObjects().removeAll(toRemove);
+
+		for (Point2D p : zone) {
+			Water water = new Water(currentRoom);
+			water.setPosition(p);
+			currentRoom.getObjects().add(water);
+		}
+
+		updateGUI();
+		ImageGUI.getInstance().update();
+
+		if (fishDied) {
+			triggerGameOver("O peixe explodiu. Clica OK para reiniciar.");
+			ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
+		}
+	}
+
+	private void validateStackDeath(GameCharacter fish) {
+
+		List<MovableObject> stack = new ArrayList<>();
+		Point2D pos = fish.getPosition().plus(Direction.UP.asVector());
+
+		while (true) {
+			MovableObject obj = getMovableObjectAt(pos);
+			if (obj == null)
+				break;
+			stack.add(obj);
+			pos = pos.plus(Direction.UP.asVector());
+		}
+
+		if (stack.isEmpty())
+			return;
+
+		int heavyCount = (int) stack.stream().filter(o -> o instanceof Heavy && ((Heavy) o).isHeavy()).count();
+
+		boolean dies = false;
+
+		if (stack.size() > fish.getSupportLimit())
+			dies = true;
+
+		if (heavyCount > 0 && !fish.canSupportHeavy())
+			dies = true;
+
+		if (fish.canSupportHeavy()) {
+			if (heavyCount > 1)
+				dies = true;
+			if (heavyCount == 1 && stack.size() > 1)
+				dies = true;
+		}
+
+		if (dies) {
+			fish.setFishDeath(true);
+			triggerGameOver("O " + fish.getName() + " morreu esmagado pela carga!");
+			ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
+		}
+	}
+
+	public void updateGUI() {
+		if (currentRoom != null) {
+			ImageGUI.getInstance().clearImages();
+			ImageGUI.getInstance().addImages(currentRoom.getObjects());
+		}
+	}
+
+	private String ticksToTime() {
+		long ticks = lastTickProcessed - ticksAtLevelStart;
+		long totalSeconds = ticks / 2;
+		long minutes = totalSeconds / 60;
+		long sec = totalSeconds % 60;
+		return String.format("%dm%02ds", minutes, sec);
+	}
+
+	private MovableObject getMovableObjectAt(Point2D p) {
+		for (GameObject obj : currentRoom.getObjects()) {
+			if (obj.getPosition().equals(p) && obj instanceof MovableObject && !(obj instanceof GameCharacter)) {
+				return (MovableObject) obj;
+			}
+		}
+		return null;
+	}
+
+	private void triggerGameOver(String message) {
+		updateGUI();
+		ImageGUI.getInstance().update();
+		ImageGUI.getInstance().showMessage("Game Over", message);
+		restartLevel();
+	}
+
+	private void restartLevel() {
+
+		File file = new File("rooms/" + currentLevelFile);
+
+		Room resetRoom = Room.readRoom(file, this);
+		rooms.put(currentLevelFile, resetRoom);
+		currentRoom = resetRoom;
+
+		SmallFish.getInstance().setRoom(currentRoom);
+		SmallFish.getInstance().setFishDeath(false);
+
+		BigFish.getInstance().setRoom(currentRoom);
+		BigFish.getInstance().setFishDeath(false);
+
+		this.isSmallFishTurn = true;
+		this.lastTickProcessed = ImageGUI.getInstance().getTicks();
+		this.numberOfMoves = 0;
+		this.ticksAtLevelStart = lastTickProcessed;
+		this.numberFish = 2;
+
+		updateGUI();
+		ImageGUI.getInstance().update();
+	}
 }
