@@ -10,4 +10,8 @@ public class Bomb extends MovableObject {
 	public String getName() { return "bomb"; }	
 	@Override
 	public int getLayer() { return 3; }
+	
+	public int explosionRange() {
+		return 1;
+	}
 }

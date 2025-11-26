@@ -7,6 +7,7 @@ public abstract class GameCharacter extends MovableElement implements Solid, Pus
 
 	protected Direction facingDirection = Direction.LEFT;
 	protected boolean isDead = false;
+	
 
 	public GameCharacter(Room room) {
 		super(room, true, false); // Sólido=true, Suporte=false
@@ -30,4 +31,5 @@ public abstract class GameCharacter extends MovableElement implements Solid, Pus
 	public boolean isDead() {
 		return isDead;
 	}
+	
 }

@@ -24,7 +24,7 @@ public enum Direction implements Serializable {
 		return vector;
 	}
 	
-	public static Direction directionFor(int keyCode) {
+	public static Direction directionFor(int keyCode) { //perguntar professor
 		switch(keyCode){
 			case KeyEvent.VK_DOWN:
 				return DOWN;	
@@ -34,9 +34,9 @@ public enum Direction implements Serializable {
 				return LEFT;
 			case KeyEvent.VK_RIGHT:
 				return RIGHT;
+			default:
+				return null;
 		}
-
-		throw new IllegalArgumentException();
 	}
 
 	public static boolean isDirection(int lastKeyPressed) {		
