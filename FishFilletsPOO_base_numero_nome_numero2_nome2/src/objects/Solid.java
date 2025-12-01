@@ -1,4 +1,4 @@
-package objects;
+	package objects;
 
 public interface Solid {
 	boolean isSolid();

@@ -10,7 +10,7 @@ public abstract class GameCharacter extends MovableElement implements Solid, Pus
 	
 
 	public GameCharacter(Room room) {
-		super(room, true, true); // Sólido=true, Suporte=false
+		super(room, true, true); // Sólido=true, Suporte=true
 	}
 
 	@Override

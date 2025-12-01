@@ -41,4 +41,8 @@ public class SmallFish extends GameCharacter {
 	public boolean canSupportHeavy() { 
 		return false;
 	}
+	@Override
+    public boolean isSmall() {
+        return true;
+    }
 }

@@ -10,6 +10,7 @@ import objects.Water;
 import objects.Anchor;
 import objects.BigFish;
 import objects.Bomb;
+import objects.Buoy;
 import objects.Cup;
 import objects.GameObject;
 import objects.HoledWall;
@@ -108,6 +109,8 @@ public class Room {
 			return new Stone(r);
 		case "A":
 			return new Anchor(r);
+		case "O":
+			return new Buoy(r);
 		case "S": {
 			GameObject sf = SmallFish.getInstance();
 			sf.setRoom(r);

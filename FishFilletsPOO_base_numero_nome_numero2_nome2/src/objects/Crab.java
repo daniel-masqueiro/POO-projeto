@@ -2,20 +2,21 @@ package objects;
 
 import pt.iscte.poo.game.Room;
 
-public class Cup extends MovableObject {
-	public Cup(Room room) {
-		// isSolid=true, isSupport=true, isHeavy=FALSE
+public class Crab extends MovableObject {
+
+	public Crab(Room room) {
+		// Room, isSolid=true, isSupport=true, isHeavy=false
 		super(room, true, true, false);
 	}
 
 	@Override
 	public String getName() {
-		return "cup";
+		return "krab";
 	}
 
 	@Override
 	public int getLayer() {
-		return 3;
+		return 2; 
 	}
 	
 	@Override

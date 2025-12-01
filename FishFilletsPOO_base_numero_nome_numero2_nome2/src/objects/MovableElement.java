@@ -12,4 +12,8 @@ public abstract class MovableElement extends GameObject {
 	public void move(Vector2D dir) {
 		setPosition(super.getPosition().plus(dir));		
 	}
+	
+	public boolean isSmall() {
+        return false;
+    }
 }

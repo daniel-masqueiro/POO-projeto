@@ -9,6 +9,8 @@ import java.util.Map;
 
 import objects.BigFish;
 import objects.Bomb;
+import objects.Crab;
+import objects.Cup;
 import objects.GameCharacter;
 import objects.GameObject;
 import objects.Heavy;
@@ -16,6 +18,7 @@ import objects.HoledWall;
 import objects.MovableObject;
 import objects.SmallFish;
 import objects.Solid;
+import objects.Stone;
 import objects.Support;
 import objects.Trap;
 import objects.Trunk;
@@ -140,15 +143,30 @@ public class GameEngine implements Observer {
 	}
 
 	private boolean isMoveValid(Point2D targetPos, Direction dir) {
+		
+		for (GameObject obj : currentRoom.getObjects()) {
+			if (!obj.getPosition().equals(targetPos))
+				continue;
+			
+			if (obj instanceof Solid && ((Solid) obj).isSolid() && !(obj instanceof MovableObject)) {
+				if (obj instanceof HoledWall) {
+					GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
+					if (!activeFish.isSmall()) {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			}
+		}
 
 		for (GameObject obj : currentRoom.getObjects()) {
-
 			if (!obj.getPosition().equals(targetPos))
 				continue;
 
 			if (obj instanceof GameCharacter)
-				return false;
-
+				return false; 
+			
 			if (obj instanceof Trap) {
 				if (!isSmallFishTurn) {
 					BigFish.getInstance().setFishDeath(true);
@@ -159,13 +177,13 @@ public class GameEngine implements Observer {
 				}
 			}
 
-			if (obj instanceof MovableObject)
-				return pushMovable((MovableObject) obj, dir);
-
-			if (obj instanceof Solid && ((Solid) obj).isSolid()) {
-				if (obj instanceof HoledWall && isSmallFishTurn)
-					continue;
-				return false;
+			if (obj instanceof MovableObject) {
+				if (obj instanceof objects.Buoy && dir == Direction.DOWN && isSmallFishTurn) {
+					return false;
+				}
+				if (obj.isSolid()) {
+					return pushMovable((MovableObject) obj, dir);
+				}
 			}
 		}
 
@@ -185,21 +203,27 @@ public class GameEngine implements Observer {
 			nextPos = nextObj.getPosition().plus(dir.asVector());
 			nextObj = getMovableObjectAt(nextPos);
 		}
-
-		for (GameObject obj : currentRoom.getObjects()) {
-			if (!obj.getPosition().equals(nextPos))
+		
+		for (GameObject tile : currentRoom.getObjects()) {
+			if (!tile.getPosition().equals(nextPos))
 				continue;
 
-			if (obj instanceof GameCharacter)
+			if (tile instanceof GameCharacter)
 				return false;
 
-			if (obj instanceof Solid && ((Solid) obj).isSolid()) {
-				if (obj instanceof MovableObject)
+			if (tile instanceof Solid && ((Solid) tile).isSolid()) {
+				if (tile instanceof MovableObject)
 					continue;
-				if (obj instanceof HoledWall && isSmallFishTurn)
-					continue;
+				
+				if (tile instanceof HoledWall) {
+					MovableObject leadingObj = chain.get(chain.size() - 1);
+					if (leadingObj.isSmall()) {
+						continue;
+					}
+					return false;
+				}
 
-				return false;
+				return false; 
 			}
 		}
 
@@ -212,12 +236,30 @@ public class GameEngine implements Observer {
 
 		if (hasHeavy && !activeFish.canPushHeavy())
 			return false;
-
 		for (int i = chain.size() - 1; i >= 0; i--) {
-			chain.get(i).move(dir.asVector());
+			MovableObject obj = chain.get(i);
+			obj.move(dir.asVector());
+			
+			if (obj instanceof Stone) {
+				Stone s = (Stone) obj;
+				if (!s.hasMoved() && (dir == Direction.LEFT || dir == Direction.RIGHT)) {
+					s.setMoved(true);
+					spawnCrab(s.getPosition().plus(Direction.UP.asVector()));
+				}
+			}
 		}
 
 		return true;
+	}
+	private void spawnCrab(Point2D position) {
+		for (GameObject obj : currentRoom.getObjects()) {
+			if (obj.getPosition().equals(position) && obj instanceof Solid && ((Solid) obj).isSolid()) {
+				return;
+			}
+		}
+		Crab crab = new Crab(currentRoom);
+		crab.setPosition(position);
+		currentRoom.addObject(crab);
 	}
 
 	private boolean isSupported(MovableObject obj) {
