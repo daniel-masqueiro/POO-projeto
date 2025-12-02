@@ -165,7 +165,7 @@ public class GameEngine implements Observer {
 				}
 			}
 
-			if (obj instanceof Solid && ((Solid) obj).isSolid() && !(obj instanceof MovableObject)) {
+			if (obj.isSolid() && !(obj instanceof MovableObject)) {
 				if (obj instanceof HoledWall) {
 					GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
 					if (!activeFish.isSmall()) {
@@ -286,7 +286,7 @@ public class GameEngine implements Observer {
 	
 	private void spawnCrab(Point2D position) {
 		for (GameObject obj : currentRoom.getObjects()) {
-			if (obj.getPosition().equals(position) && obj instanceof Solid && ((Solid) obj).isSolid()) {
+			if (obj.getPosition().equals(position) && obj.isSolid()) {
 				return;
 			}
 		}
