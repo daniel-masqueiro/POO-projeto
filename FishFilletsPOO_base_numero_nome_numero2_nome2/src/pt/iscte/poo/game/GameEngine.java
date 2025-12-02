@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import objects.Anchor;
 import objects.BigFish;
 import objects.Bomb;
 import objects.Buoy;
@@ -188,7 +189,6 @@ public class GameEngine implements Observer {
 				return false; 
 
 			if (obj instanceof MovableObject) {
-				// Regra específica da Boia: Peixe pequeno não empurra para baixo
 				if (obj instanceof Buoy && dir == Direction.DOWN && isSmallFishTurn) {
 					return false;
 				}
@@ -209,12 +209,14 @@ public class GameEngine implements Observer {
 		Point2D nextPos = firstObj.getPosition().plus(dir.asVector());
 		MovableObject nextObj = getMovableObjectAt(nextPos);
 
+		// Constrói a cadeia de objetos a empurrar
 		while (nextObj != null) {
 			chain.add(nextObj);
 			nextPos = nextObj.getPosition().plus(dir.asVector());
 			nextObj = getMovableObjectAt(nextPos);
 		}
 		
+		// --- 1. Validação do destino final (se bate em parede, etc.) ---
 		for (GameObject tile : currentRoom.getObjects()) {
 			if (!tile.getPosition().equals(nextPos))
 				continue;
@@ -240,6 +242,7 @@ public class GameEngine implements Observer {
 
 		GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
 
+		// --- 2. Validações de Força do Peixe ---
 		if (chain.size() > activeFish.getPushLimit())
 			return false;
 
@@ -248,16 +251,41 @@ public class GameEngine implements Observer {
 		if (hasHeavy && !activeFish.canPushHeavy())
 			return false;
 		
+		// --- 3. Validações Específicas da ÂNCORA (Nova Lógica) ---
+		for (MovableObject obj : chain) {
+			if (obj instanceof Anchor) {
+				Anchor anchor = (Anchor) obj;
+				
+				// Regra: Âncora não sobe (não pode ser empurrada para CIMA)
+				if (dir == Direction.UP) {
+					return false;
+				}
+				
+				// Regra: Âncora só move 1 vez na horizontal
+				if ((dir == Direction.LEFT || dir == Direction.RIGHT) && anchor.hasMovedHorizontally()) {
+					return false;
+				}
+			}
+		}
+
+		// --- 4. Execução do Movimento ---
 		for (int i = chain.size() - 1; i >= 0; i--) {
 			MovableObject obj = chain.get(i);
 			obj.move(dir.asVector());
 			
-			// Lógica de Spawn do Caranguejo ao mover Pedra
+			// Atualiza estado da Pedra (spawn Caranguejo)
 			if (obj instanceof Stone) {
 				Stone s = (Stone) obj;
 				if (!s.hasMoved() && (dir == Direction.LEFT || dir == Direction.RIGHT)) {
 					s.setMoved(true);
 					spawnCrab(s.getPosition().plus(Direction.UP.asVector()));
+				}
+			}
+			
+			// Atualiza estado da Âncora (Regista que já se moveu)
+			if (obj instanceof Anchor) {
+				if (dir == Direction.LEFT || dir == Direction.RIGHT) {
+					((Anchor) obj).setMovedHorizontally(true);
 				}
 			}
 		}
@@ -295,27 +323,28 @@ public class GameEngine implements Observer {
 
 		for (GameObject obj : allObjects) {
 
-			// Usamos MovableElement para incluir tanto Objetos (Pedra, Boia) como Personagens (Caranguejo)
 			if (!(obj instanceof MovableElement))
 				continue;
 
 			MovableElement m = (MovableElement) obj;
 			
-			// Ignora os peixes controlados pelo jogador (eles não sofrem gravidade automática)
-			// Apenas o Caranguejo (que é GameCharacter) e objetos sofrem física
+			// Ignora Peixes (eles movem-se por input ou lógica própria)
 			if (m instanceof SmallFish || m instanceof BigFish)
 				continue;
 
 			// --- Lógica da Boia (Floatable) ---
-			// É CRITICO que a classe Buoy tenha "implements Floatable"
 			if (m instanceof Floatable && ((Floatable) m).triesToFloat()) {
-				// Se tiver algo em cima, comporta-se como um objeto pesado (gravidade)
-				
-					// Se estiver livre, flutua
+				// Verifica se tem "PESO" em cima (Pedras, etc.)
+				if (hasObjectAbove(m)) {
+					// Se tiver peso, comporta-se como gravidade (afunda)
+					applyGravity(m);
+				} else {
+					// Se não tiver peso, tenta subir
+					// (Se tiver um Peixe em cima, vai detetar como Sólido e fica parada)
 					applyBuoyancy(m);
+				}
 			} else {
 				// --- Lógica Normal (Gravidade) ---
-				// Aplica-se a Pedras, Armadilhas e Caranguejos
 				applyGravity(m);
 			}
 		}
@@ -324,12 +353,13 @@ public class GameEngine implements Observer {
 		validateStackDeath(BigFish.getInstance());
 	}
 
-	// Verifica se existe algum elemento móvel imediatamente acima (impede a boia de subir)
+	// CORREÇÃO: Verifica apenas MovableObject (Pedras, etc). 
+	// Ignora GameCharacter (Peixes), pois eles não "pesam" na boia, apenas bloqueiam.
 	private boolean hasObjectAbove(MovableElement obj) {
 		Point2D posAbove = obj.getPosition().plus(Direction.UP.asVector());
 		for (GameObject other : currentRoom.getObjects()) {
-			// Se houver qualquer MovableElement (Peixe, Pedra, etc) em cima, retorna true
-			if (other.getPosition().equals(posAbove) && other instanceof MovableElement) {
+			// Alterado de MovableElement para MovableObject
+			if (other.getPosition().equals(posAbove) && other instanceof MovableObject) {
 				return true;
 			}
 		}
