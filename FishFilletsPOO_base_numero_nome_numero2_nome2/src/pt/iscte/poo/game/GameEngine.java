@@ -239,7 +239,13 @@ public class GameEngine implements Observer {
 		if (chain.size() > activeFish.getPushLimit())
 			return false;
 
-		boolean hasHeavy = chain.stream().anyMatch(o -> o instanceof Heavy && ((Heavy) o).isHeavy());
+		boolean hasHeavy = false;
+		for (MovableObject o : chain) {
+		    if (o instanceof Heavy && ((Heavy) o).isHeavy()) {
+		        hasHeavy = true;
+		        break;
+		    }
+		}
 
 		if (hasHeavy && !activeFish.canPushHeavy())
 			return false;
@@ -517,7 +523,12 @@ public class GameEngine implements Observer {
 		if (stack.isEmpty())
 			return;
 
-		int heavyCount = (int) stack.stream().filter(o -> o instanceof Heavy && ((Heavy) o).isHeavy()).count();
+		int heavyCount = 0;
+		for (MovableObject o : stack) {
+		    if (o instanceof Heavy && ((Heavy) o).isHeavy()) {
+		        heavyCount++;
+		    }
+		}
 
 		boolean dies = false;
 
