@@ -2,10 +2,9 @@ package objects;
 
 import pt.iscte.poo.game.Room;
 
-public class Buoy extends MovableObject {
+public class Buoy extends MovableObject implements Floatable {
 
 	public Buoy(Room room) {
-		// Room, isSolid=true, isSupport=true, isHeavy=false
 		super(room, true, true, false);
 	}
 
@@ -17,5 +16,9 @@ public class Buoy extends MovableObject {
 	@Override
 	public int getLayer() {
 		return 3;
+	}
+	@Override
+	public boolean triesToFloat() {
+		return true;
 	}
 }

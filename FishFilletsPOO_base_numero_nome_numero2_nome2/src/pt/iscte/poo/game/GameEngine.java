@@ -9,12 +9,15 @@ import java.util.Map;
 
 import objects.BigFish;
 import objects.Bomb;
+import objects.Buoy;
 import objects.Crab;
-import objects.Cup;
+import objects.Dangerous;
+import objects.Floatable;
 import objects.GameCharacter;
 import objects.GameObject;
 import objects.Heavy;
 import objects.HoledWall;
+import objects.MovableElement;
 import objects.MovableObject;
 import objects.SmallFish;
 import objects.Solid;
@@ -109,7 +112,10 @@ public class GameEngine implements Observer {
 								loadNextLevel();
 							}
 						}
-
+						
+						// Movimenta os inimigos (ex: Caranguejo) sempre que o jogador joga
+						moveEnemies();
+						
 						numberOfMoves++;
 					}
 				}
@@ -148,6 +154,20 @@ public class GameEngine implements Observer {
 			if (!obj.getPosition().equals(targetPos))
 				continue;
 			
+			// Verifica objetos Perigosos (Interface Dangerous)
+			if (obj instanceof Dangerous) {
+				GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
+				
+				if (((Dangerous) obj).isLethalTo(activeFish)) {
+					// Peixe morre ao tocar no objeto
+					activeFish.setFishDeath(true);
+					activeFish.move(dir.asVector());
+					triggerGameOver("O " + activeFish.getName() + " morreu devido a " + obj.getName() + "!");
+					ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
+					return false;
+				}
+			}
+
 			if (obj instanceof Solid && ((Solid) obj).isSolid() && !(obj instanceof MovableObject)) {
 				if (obj instanceof HoledWall) {
 					GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
@@ -166,19 +186,10 @@ public class GameEngine implements Observer {
 
 			if (obj instanceof GameCharacter)
 				return false; 
-			
-			if (obj instanceof Trap) {
-				if (!isSmallFishTurn) {
-					BigFish.getInstance().setFishDeath(true);
-					BigFish.getInstance().move(dir.asVector());
-					triggerGameOver("O peixe grande morreu na armadilha! Clica OK para voltar ao início.");
-					ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
-					return false;
-				}
-			}
 
 			if (obj instanceof MovableObject) {
-				if (obj instanceof objects.Buoy && dir == Direction.DOWN && isSmallFishTurn) {
+				// Regra específica da Boia: Peixe pequeno não empurra para baixo
+				if (obj instanceof Buoy && dir == Direction.DOWN && isSmallFishTurn) {
 					return false;
 				}
 				if (obj.isSolid()) {
@@ -236,10 +247,12 @@ public class GameEngine implements Observer {
 
 		if (hasHeavy && !activeFish.canPushHeavy())
 			return false;
+		
 		for (int i = chain.size() - 1; i >= 0; i--) {
 			MovableObject obj = chain.get(i);
 			obj.move(dir.asVector());
 			
+			// Lógica de Spawn do Caranguejo ao mover Pedra
 			if (obj instanceof Stone) {
 				Stone s = (Stone) obj;
 				if (!s.hasMoved() && (dir == Direction.LEFT || dir == Direction.RIGHT)) {
@@ -251,6 +264,7 @@ public class GameEngine implements Observer {
 
 		return true;
 	}
+	
 	private void spawnCrab(Point2D position) {
 		for (GameObject obj : currentRoom.getObjects()) {
 			if (obj.getPosition().equals(position) && obj instanceof Solid && ((Solid) obj).isSolid()) {
@@ -262,7 +276,8 @@ public class GameEngine implements Observer {
 		currentRoom.addObject(crab);
 	}
 
-	private boolean isSupported(MovableObject obj) {
+	// Alterado para MovableElement para suportar Crab e MovableObject
+	private boolean isSupported(MovableElement obj) {
 		Point2D posBelow = obj.getPosition().plus(Direction.DOWN.asVector());
 
 		for (GameObject other : currentRoom.getObjects()) {
@@ -280,54 +295,178 @@ public class GameEngine implements Observer {
 
 		for (GameObject obj : allObjects) {
 
-			if (!(obj instanceof MovableObject))
+			// Usamos MovableElement para incluir tanto Objetos (Pedra, Boia) como Personagens (Caranguejo)
+			if (!(obj instanceof MovableElement))
 				continue;
 
-			MovableObject m = (MovableObject) obj;
-			Point2D posBelow = m.getPosition().plus(Direction.DOWN.asVector());
-
-			if (SmallFish.getInstance().getPosition().equals(posBelow)) {
-				if (m instanceof Heavy && ((Heavy) m).isHeavy()) {
-					SmallFish.getInstance().setFishDeath(true);
-					m.move(Direction.DOWN.asVector());
-					triggerGameOver("O peixe pequeno morreu esmagado! Clica OK para voltar ao início.");
-					ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
-					return;
-				}
-				continue;
-			}
-
-			if (BigFish.getInstance().getPosition().equals(posBelow))
+			MovableElement m = (MovableElement) obj;
+			
+			// Ignora os peixes controlados pelo jogador (eles não sofrem gravidade automática)
+			// Apenas o Caranguejo (que é GameCharacter) e objetos sofrem física
+			if (m instanceof SmallFish || m instanceof BigFish)
 				continue;
 
-			Trunk trunkBelow = null;
-			for (GameObject t : currentRoom.getObjects()) {
-				if (t instanceof Trunk && t.getPosition().equals(posBelow)) {
-					trunkBelow = (Trunk) t;
-					break;
-				}
-			}
-
-			if (m instanceof Heavy && ((Heavy) m).isHeavy() && trunkBelow != null) {
-				currentRoom.getObjects().remove(trunkBelow);
-				m.move(Direction.DOWN.asVector());
-				updateGUI();
-				ImageGUI.getInstance().update();
-				continue;
-			}
-
-			if (!isSupported(m)) {
-				m.move(Direction.DOWN.asVector());
-
-				if (m instanceof Bomb && isSupported(m)) {
-					explosion(m.getPosition());
-					return;
-				}
+			// --- Lógica da Boia (Floatable) ---
+			// É CRITICO que a classe Buoy tenha "implements Floatable"
+			if (m instanceof Floatable && ((Floatable) m).triesToFloat()) {
+				// Se tiver algo em cima, comporta-se como um objeto pesado (gravidade)
+				
+					// Se estiver livre, flutua
+					applyBuoyancy(m);
+			} else {
+				// --- Lógica Normal (Gravidade) ---
+				// Aplica-se a Pedras, Armadilhas e Caranguejos
+				applyGravity(m);
 			}
 		}
 
 		validateStackDeath(SmallFish.getInstance());
 		validateStackDeath(BigFish.getInstance());
+	}
+
+	// Verifica se existe algum elemento móvel imediatamente acima (impede a boia de subir)
+	private boolean hasObjectAbove(MovableElement obj) {
+		Point2D posAbove = obj.getPosition().plus(Direction.UP.asVector());
+		for (GameObject other : currentRoom.getObjects()) {
+			// Se houver qualquer MovableElement (Peixe, Pedra, etc) em cima, retorna true
+			if (other.getPosition().equals(posAbove) && other instanceof MovableElement) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void applyBuoyancy(MovableElement m) {
+		Point2D posAbove = m.getPosition().plus(Direction.UP.asVector());
+		boolean blocked = false;
+		
+		// Verifica se está bloqueada por paredes ou limites do mapa
+		for (GameObject obj : currentRoom.getObjects()) {
+			if (obj.getPosition().equals(posAbove) && obj instanceof Solid && ((Solid)obj).isSolid()) {
+				blocked = true;
+				break;
+			}
+		}
+		
+		// Se não estiver bloqueada e estiver dentro do mapa, SOBE
+		if (!blocked && ImageGUI.getInstance().isWithinBounds(posAbove)) {
+			m.move(Direction.UP.asVector());
+		}
+	}
+
+	// Método alterado para aceitar MovableElement (suporta Crab)
+	private void applyGravity(MovableElement m) {
+		Point2D posBelow = m.getPosition().plus(Direction.DOWN.asVector());
+
+		// 1. Verifica se cai em cima do Peixe Pequeno (Esmagamento)
+		if (SmallFish.getInstance().getPosition().equals(posBelow)) {
+			// Apenas MovableObject pode ser Heavy (Crab não é Heavy pela interface, mas não deve esmagar desta forma)
+			if (m instanceof Heavy && ((Heavy) m).isHeavy()) {
+				SmallFish.getInstance().setFishDeath(true);
+				m.move(Direction.DOWN.asVector());
+				triggerGameOver("O peixe pequeno morreu esmagado! Clica OK para voltar ao início.");
+				ImageGUI.getInstance().showMessage("Reinício", "Nível reiniciado");
+				return;
+			}
+			return; // Se não for pesado, fica em cima do peixe (suporte)
+		}
+
+		// 2. Verifica se cai em cima do Peixe Grande (Suporte)
+		if (BigFish.getInstance().getPosition().equals(posBelow))
+			return;
+
+		// 3. Verifica se cai em cima de um Tronco (Esmaga tronco)
+		Trunk trunkBelow = null;
+		for (GameObject t : currentRoom.getObjects()) {
+			if (t instanceof Trunk && t.getPosition().equals(posBelow)) {
+				trunkBelow = (Trunk) t;
+				break;
+			}
+		}
+
+		if (m instanceof Heavy && ((Heavy) m).isHeavy() && trunkBelow != null) {
+			currentRoom.getObjects().remove(trunkBelow);
+			m.move(Direction.DOWN.asVector());
+			updateGUI();
+			ImageGUI.getInstance().update();
+			return;
+		}
+
+		// 4. Se não tiver suporte, CAI
+		if (!isSupported(m)) {
+			m.move(Direction.DOWN.asVector());
+
+			// Se for Bomba e cair no chão/suporte, explode? (Lógica original mantida)
+			if (m instanceof Bomb && isSupported(m)) {
+				explosion(m.getPosition());
+				return;
+			}
+			
+			// Se for um Inimigo (Caranguejo) a cair, verifica onde aterra
+			if (m instanceof Dangerous && m instanceof GameCharacter) {
+				checkEnemyCollisions((GameCharacter) m);
+			}
+		}
+	}
+
+	private void moveEnemies() {
+		List<GameObject> objectsCopy = new ArrayList<>(currentRoom.getObjects());
+		
+		for (GameObject obj : objectsCopy) {
+			if (obj instanceof GameCharacter && ((GameCharacter)obj).isEnemy()) {
+				GameCharacter enemy = (GameCharacter) obj;
+				
+				Direction randomDir = Math.random() < 0.5 ? Direction.LEFT : Direction.RIGHT;
+				Point2D newPos = enemy.getPosition().plus(randomDir.asVector());
+
+				if (canEnemyMove(enemy, newPos)) {
+					enemy.setPosition(newPos);
+					checkEnemyCollisions(enemy);
+				}
+			}
+		}
+	}
+
+	private boolean canEnemyMove(GameCharacter enemy, Point2D target) {
+		if (!ImageGUI.getInstance().isWithinBounds(target)) return false;
+		
+		for (GameObject obj : currentRoom.getObjects()) {
+			if (obj.getPosition().equals(target)) {
+				if (obj instanceof Trap || obj instanceof BigFish) {
+					currentRoom.removeObject(enemy); 
+					return false; 
+				}
+				if (obj instanceof SmallFish) {
+					return true;
+				}
+				if (obj instanceof Solid && ((Solid)obj).isSolid()) {
+					if (obj instanceof HoledWall && enemy.isSmall()) continue;
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	private void checkEnemyCollisions(GameCharacter enemy) {
+		Point2D pos = enemy.getPosition();
+		
+		if (pos.equals(SmallFish.getInstance().getPosition())) {
+			if (enemy instanceof Dangerous && ((Dangerous)enemy).isLethalTo(SmallFish.getInstance())) {
+				triggerGameOver("O Peixe Pequeno foi apanhado pelo inimigo!");
+			}
+		}
+		
+		if (pos.equals(BigFish.getInstance().getPosition())) {
+			currentRoom.removeObject(enemy);
+		}
+		
+		for(GameObject obj : currentRoom.getObjects()) {
+			if(obj.getPosition().equals(pos) && obj instanceof Trap) {
+				currentRoom.removeObject(enemy);
+				break;
+			}
+		}
 	}
 
 	private void explosion(Point2D center) {

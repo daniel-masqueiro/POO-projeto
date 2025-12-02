@@ -1,8 +1,9 @@
 package objects;
 
 import pt.iscte.poo.game.Room;
+import pt.iscte.poo.utils.Direction;
 
-public class Crab extends GameCharacter {
+public class Crab extends GameCharacter implements Dangerous {
 
 	public Crab(Room room) {
 		super(room);
@@ -15,13 +16,13 @@ public class Crab extends GameCharacter {
 
 	@Override
 	public int getLayer() {
-		return 2; 
+		return 2;
 	}
-	
+
 	@Override
-    public boolean isSmall() {
-        return true;
-    }
+	public boolean isSmall() {
+		return true;
+	}
 
 	@Override
 	public int getPushLimit() {
@@ -41,5 +42,15 @@ public class Crab extends GameCharacter {
 	@Override
 	public boolean canSupportHeavy() {
 		return false;
+	}
+
+	@Override
+	public boolean isEnemy() {
+		return true;
+	}
+
+	@Override
+	public boolean isLethalTo(GameCharacter character) {
+		return character instanceof SmallFish;
 	}
 }
