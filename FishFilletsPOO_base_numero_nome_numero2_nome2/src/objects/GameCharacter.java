@@ -32,4 +32,8 @@ public abstract class GameCharacter extends MovableElement implements Solid, Pus
 		return isDead;
 	}
 	
+	public boolean isEnemy() {
+		return false;
+	}
+	
 }

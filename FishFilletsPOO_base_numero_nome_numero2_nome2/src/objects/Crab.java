@@ -2,11 +2,10 @@ package objects;
 
 import pt.iscte.poo.game.Room;
 
-public class Crab extends MovableObject {
+public class Crab extends GameCharacter {
 
 	public Crab(Room room) {
-		// Room, isSolid=true, isSupport=true, isHeavy=false
-		super(room, true, true, false);
+		super(room);
 	}
 
 	@Override
@@ -23,4 +22,24 @@ public class Crab extends MovableObject {
     public boolean isSmall() {
         return true;
     }
+
+	@Override
+	public int getPushLimit() {
+		return 0;
+	}
+
+	@Override
+	public boolean canPushHeavy() {
+		return false;
+	}
+
+	@Override
+	public int getSupportLimit() {
+		return 0;
+	}
+
+	@Override
+	public boolean canSupportHeavy() {
+		return false;
+	}
 }

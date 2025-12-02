@@ -1,8 +1,8 @@
-<<Interfaces>>
+Interfaces
     Solid   { boolean isSolid() }
     Support { boolean isSupport() }
     Heavy   { boolean isHeavy() }
-	PushAgent { int getPushLimit();boolean canPushHeavy();int getSupportLimit();boolean canSupportHeavy() }
+	PushAgent { int getPushLimit();boolean canPushHeavy();int getSupportLimit();boolean canSupportHeavy() } /mudar parar função da classe do gamecharacter
 	
 GameObject { (abstract) implements Solid, Support
     (Configuração base: Solid=true, Support=true)
@@ -22,11 +22,12 @@ GameObject { (abstract) implements Solid, Support
         GameCharacter { (abstract)
             (Configuração: Solid=true, Support=false)
             
-            validatePush(List<MovableObject> chain)
             setFacingDirection(Direction dir)
+            isEnemy()
 
             BigFish {Layer: 2} (Regra: Max 4 leves ou 1 pesado)
             SmallFish {Layer: 2} (Regra: Max 1 leve)
+            Crab {Layer: 2} IsEnemy=true 
         }
 
         MovableObject { (abstract) implements Heavy
