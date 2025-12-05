@@ -132,20 +132,45 @@ public class GameEngine implements Observer {
 	}
 
 	private void loadNextLevel() {
-		String numberStr = currentLevelFile.replaceAll("\\D+", "");
-		int nextNum = Integer.parseInt(numberStr) + 1;
-		String nextLevelFile = "room" + nextNum + ".txt";
+        // 1. Acumular estatísticas do nível que acabou de ser concluído
+        totalMovesRun += numberOfMoves;
+        totalTimeRun += (lastTickProcessed - ticksAtLevelStart) / 2; // /2 porque cada segundo são 2 ticks (aprox)
 
-		File nextFile = new File("rooms/" + nextLevelFile);
+        String numberStr = currentLevelFile.replaceAll("\\D+", "");
+        int nextNum = Integer.parseInt(numberStr) + 1;
+        String nextLevelFile = "room" + nextNum + ".txt";
 
-		if (nextFile.exists()) {
-			currentLevelFile = nextLevelFile;
-			restartLevel();
-			ImageGUI.getInstance().showMessage("Nível Concluído!", "A carregar o nivel " + nextNum + "...");
-		} else {
-			ImageGUI.getInstance().showMessage("Vitoria!", "kazzio");
-		}
-	}
+        File nextFile = new File("rooms/" + nextLevelFile);
+
+        if (nextFile.exists()) {
+            currentLevelFile = nextLevelFile;
+            restartLevel();
+            ImageGUI.getInstance().showMessage("Nível Concluído!", "A carregar o nivel " + nextNum + "...");
+        } else {
+            // FIM DO JOGO - VITÓRIA
+            handleVictory();
+        }
+    }
+
+    private void handleVictory() {
+        ImageGUI.getInstance().showMessage("VITÓRIA!", "Parabéns, completaste todos os níveis!");
+        
+        // Pedir nome ao utilizador
+        String name = ImageGUI.getInstance().askUser("Introduz o teu nome para o Highscore:");
+        if (name == null || name.trim().isEmpty()) {
+            name = "Anónimo";
+        }
+
+        // Registar Score
+        HighScoreManager manager = new HighScoreManager();
+        manager.addScore(name, totalMovesRun, totalTimeRun);
+
+        // Mostrar Tabela
+        ImageGUI.getInstance().showMessage("Highscores", manager.getHighScoresBoard());
+        
+        // Opcional: Fechar jogo ou reiniciar tudo
+        System.exit(0); 
+    }
 
 	private boolean isMoveValid(Point2D targetPos, Direction dir) {
 		
