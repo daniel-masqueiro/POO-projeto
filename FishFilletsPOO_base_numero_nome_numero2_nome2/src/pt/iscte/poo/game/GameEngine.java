@@ -46,9 +46,14 @@ public class GameEngine implements Observer {
 	private int ticksAtLevelStart;
 	private int numberFish;
 
+	private int totalMovesRun;
+	private int totalTimeRun;
+
 	public GameEngine() {
 		this.currentLevelFile = "room0.txt";
 		this.rooms = new HashMap<>();
+		this.totalMovesRun = 0;
+		this.totalTimeRun = 0;
 
 		loadGame();
 		currentRoom = rooms.get(currentLevelFile);
@@ -132,9 +137,8 @@ public class GameEngine implements Observer {
 	}
 
 	private void loadNextLevel() {
-        // 1. Acumular estatísticas do nível que acabou de ser concluído
         totalMovesRun += numberOfMoves;
-        totalTimeRun += (lastTickProcessed - ticksAtLevelStart) / 2; // /2 porque cada segundo são 2 ticks (aprox)
+        totalTimeRun += (lastTickProcessed - ticksAtLevelStart) / 2;
 
         String numberStr = currentLevelFile.replaceAll("\\D+", "");
         int nextNum = Integer.parseInt(numberStr) + 1;
@@ -147,7 +151,6 @@ public class GameEngine implements Observer {
             restartLevel();
             ImageGUI.getInstance().showMessage("Nível Concluído!", "A carregar o nivel " + nextNum + "...");
         } else {
-            // FIM DO JOGO - VITÓRIA
             handleVictory();
         }
     }
@@ -155,20 +158,16 @@ public class GameEngine implements Observer {
     private void handleVictory() {
         ImageGUI.getInstance().showMessage("VITÓRIA!", "Parabéns, completaste todos os níveis!");
         
-        // Pedir nome ao utilizador
         String name = ImageGUI.getInstance().askUser("Introduz o teu nome para o Highscore:");
         if (name == null || name.trim().isEmpty()) {
             name = "Anónimo";
         }
 
-        // Registar Score
         HighScoreManager manager = new HighScoreManager();
         manager.addScore(name, totalMovesRun, totalTimeRun);
 
-        // Mostrar Tabela
         ImageGUI.getInstance().showMessage("Highscores", manager.getHighScoresBoard());
         
-        // Opcional: Fechar jogo ou reiniciar tudo
         System.exit(0); 
     }
 
