@@ -1,7 +1,6 @@
 package objects;
 
 import pt.iscte.poo.game.Room;
-import pt.iscte.poo.utils.Direction;
 
 public class Crab extends GameCharacter implements Dangerous {
 

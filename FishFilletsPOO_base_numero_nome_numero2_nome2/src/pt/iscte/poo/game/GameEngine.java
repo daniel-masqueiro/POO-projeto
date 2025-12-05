@@ -296,14 +296,20 @@ public class GameEngine implements Observer {
 	}
 
 	private boolean isSupported(MovableElement obj) {
-		Point2D posBelow = obj.getPosition().plus(Direction.DOWN.asVector());
+	    Point2D posBelow = obj.getPosition().plus(Direction.DOWN.asVector());
 
-		for (GameObject other : currentRoom.getObjects()) {
-			if (other.getPosition().equals(posBelow) && other instanceof Support && ((Support) other).isSupport()) {
-				return true;
-			}
-		}
-		return false;
+	    for (GameObject other : currentRoom.getObjects()) {
+	        if (other.getPosition().equals(posBelow)) {
+	            if (other instanceof Support && ((Support) other).isSupport()) {
+	                if (other instanceof HoledWall && obj.isSmall()) {
+	                    return false;
+	                }
+	                
+	                return true;
+	            }
+	        }
+	    }
+	    return false;
 	}
 
 	private void processTick() {
