@@ -4,7 +4,7 @@ import pt.iscte.poo.game.GameEngine;
 import pt.iscte.poo.game.Room;
 import pt.iscte.poo.utils.Direction;
 import pt.iscte.poo.utils.Point2D;
-import objects.HoledWall; 
+import objects.Transpassable; 
 
 public abstract class MovableObject extends MovableElement implements Heavy {
 
@@ -18,12 +18,7 @@ public abstract class MovableObject extends MovableElement implements Heavy {
 	@Override
 	public boolean isHeavy() { return isHeavy; }
 
-	// --- SOBRESCRITA LIMPA: Objetos móveis têm prioridade ---
-	@Override
-	public int getPriority() {
-		return 1;
-	}
-	// --------------------------------------------------------
+	
 
 	public boolean canBeMovedBy(GameCharacter actor) {
 		if (this.isHeavy() && !actor.canPushHeavy()) return false;
@@ -74,11 +69,20 @@ public abstract class MovableObject extends MovableElement implements Heavy {
 			return true;
 		}
 
-		if (objBehind instanceof HoledWall && this.isSmall()) {
-			this.move(dir.asVector());
-			return true;
+		// --- CORREÇÃO AQUI ---
+		if (objBehind instanceof Transpassable) {
+			// Se o objeto deixa-me entrar (ex: Sou Copo e aquilo é Parede com Buraco), entro.
+			if (((Transpassable) objBehind).isPassableFor(this)) {
+				this.move(dir.asVector());
+				return true; 
+			} 
+			// Se NÃO deixar entrar (ex: Sou Copo e aquilo é Armadilha), 
+			// NÃO retornamos false. Deixamos o código continuar para baixo
+			// para tentar EMPURRAR a armadilha.
 		}
+		// ---------------------
 
+		// Tenta empurrar (Isto agora vai ser chamado para a Trap também)
 		if (objBehind.interact(actor, dir, engine)) {
 			this.move(dir.asVector());
 			return true;

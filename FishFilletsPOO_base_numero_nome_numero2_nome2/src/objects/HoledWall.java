@@ -4,24 +4,29 @@ import pt.iscte.poo.game.GameEngine;
 import pt.iscte.poo.game.Room;
 import pt.iscte.poo.utils.Direction;
 
-public class HoledWall extends GameObject {
+public class HoledWall extends GameObject implements Transpassable {
 
 	public HoledWall(Room room) {
-		super(room, true, true); // Sólido = true (GameEngine trata a exceção via interact)
+		super(room, true, true);
 	}
 
 	@Override
 	public String getName() { return "holedWall"; }
 
 	@Override
-	public int getLayer() { return 3; }
+	public int getLayer() { return 0; }
 	
 	@Override
-	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
-		// Regra: Só o peixe pequeno passa
-		if (actor.isSmall()) {
-			return true;
+	public boolean isPassableFor(GameObject obj) {
+		// Deixa passar Copos, Pedras pequenas, Peixes pequenos
+		if (obj instanceof MovableElement) {
+			return ((MovableElement) obj).isSmall();
 		}
-		return false; // Bloqueia peixe grande ou outros objetos
+		return false;
+	}
+
+	@Override
+	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
+		return isPassableFor(actor);
 	}
 }

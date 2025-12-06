@@ -24,7 +24,6 @@ public abstract class GameObject implements ImageTile, Solid, Support {
 		this.isSolid = isSolid;
 		this.isSupport = isSupport;
 	}
-	
 	@Override
 	public boolean isSolid() { return isSolid; }
 
@@ -41,12 +40,6 @@ public abstract class GameObject implements ImageTile, Solid, Support {
 	public Room getRoom() { return room; }
 	
 	public void setRoom(Room room) { this.room = room; }
-
-	// --- NOVO MÉTODO: Define a prioridade de interação (Polimorfismo) ---
-	// 0 é a prioridade base (Objetos estáticos como Paredes)
-	public int getPriority() {
-		return 0; 
-	}
 
 	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
 		return !isSolid();

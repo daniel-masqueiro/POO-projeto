@@ -21,23 +21,19 @@ public class BigFish extends GameCharacter {
 	@Override
 	public int getLayer() { return 2; }
 
-	// CORREÇÃO: Limite de empurrar depende da direção
 	@Override
 	public int getPushLimit(Direction dir) { 
-		// "pode empurrar na vertical um ÚNICO objecto"
+		// CORREÇÃO: Limite vertical = 1
 		if (dir == Direction.UP || dir == Direction.DOWN) {
 			return 1;
 		}
-		// Na horizontal pode empurrar vários
 		return 10;
 	}
 
 	@Override
 	public boolean canPushHeavy() { return true; }
-
 	@Override
 	public int getSupportLimit() { return 4; }
-
 	@Override
 	public boolean canSupportHeavy() { return true; }
 
