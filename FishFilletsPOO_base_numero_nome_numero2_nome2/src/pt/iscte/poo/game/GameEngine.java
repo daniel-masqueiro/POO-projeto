@@ -61,7 +61,13 @@ public class GameEngine implements Observer {
 		updateGUI();
 
 		SmallFish.getInstance().setRoom(currentRoom);
+		if (currentRoom.getSmallFishStartingPosition() != null) {
+	        SmallFish.getInstance().setPosition(currentRoom.getSmallFishStartingPosition());
+	    }
 		BigFish.getInstance().setRoom(currentRoom);
+		if (currentRoom.getBigFishStartingPosition() != null) {
+	        BigFish.getInstance().setPosition(currentRoom.getBigFishStartingPosition());
+	    }
 
 		this.isSmallFishTurn = true;
 		this.lastTickProcessed = 0;
