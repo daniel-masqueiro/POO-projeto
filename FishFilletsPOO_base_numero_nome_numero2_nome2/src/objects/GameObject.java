@@ -1,7 +1,9 @@
 package objects;
 
+import pt.iscte.poo.game.GameEngine;
 import pt.iscte.poo.game.Room;
 import pt.iscte.poo.gui.ImageTile;
+import pt.iscte.poo.utils.Direction;
 import pt.iscte.poo.utils.Point2D;
 
 public abstract class GameObject implements ImageTile, Solid, Support {
@@ -22,34 +24,31 @@ public abstract class GameObject implements ImageTile, Solid, Support {
 		this.isSolid = isSolid;
 		this.isSupport = isSupport;
 	}
+	
 	@Override
-	public boolean isSolid() {
-		return isSolid;
-	}
+	public boolean isSolid() { return isSolid; }
 
 	@Override
-	public boolean isSupport() {
-		return isSupport;
-	}
+	public boolean isSupport() { return isSupport; }
 
-	public void setPosition(int i, int j) {
-		position = new Point2D(i, j);
-	}
+	public void setPosition(int i, int j) { position = new Point2D(i, j); }
 	
-	public void setPosition(Point2D position) {
-		this.position = position;
-	}
+	public void setPosition(Point2D position) { this.position = position; }
 
 	@Override
-	public Point2D getPosition() {
-		return position;
-	}
+	public Point2D getPosition() { return position; }
 	
-	public Room getRoom() {
-		return room;
-	}
+	public Room getRoom() { return room; }
 	
-	public void setRoom(Room room) {
-		this.room = room;
+	public void setRoom(Room room) { this.room = room; }
+
+	// --- NOVO MÉTODO: Define a prioridade de interação (Polimorfismo) ---
+	// 0 é a prioridade base (Objetos estáticos como Paredes)
+	public int getPriority() {
+		return 0; 
+	}
+
+	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
+		return !isSolid();
 	}
 }

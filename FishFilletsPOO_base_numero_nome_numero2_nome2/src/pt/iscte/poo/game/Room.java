@@ -113,12 +113,10 @@ public class Room {
 			return new Buoy(r);
 		case "S": {
 			GameObject sf = SmallFish.getInstance();
-			sf.setRoom(r);
 			return sf;
 		}
 		case "B": {
 			GameObject bf = BigFish.getInstance();
-			bf.setRoom(r);
 			return bf;
 		}
 		default:
@@ -149,6 +147,11 @@ public class Room {
 	                if (o != null) {
 	                    o.setPosition(x, y);
 	                    r.addObject(o);
+	                    if (o instanceof SmallFish) {
+                            r.setSmallFishStartingPosition(new Point2D(x, y));
+                        } else if (o instanceof BigFish) {
+                            r.setBigFishStartingPosition(new Point2D(x, y));
+                        }
 	                }
 	            }
 	            y++; 

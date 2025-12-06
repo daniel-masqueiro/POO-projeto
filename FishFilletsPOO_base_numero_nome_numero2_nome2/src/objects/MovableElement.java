@@ -1,6 +1,9 @@
 package objects;
 
+import pt.iscte.poo.game.GameEngine;
 import pt.iscte.poo.game.Room;
+import pt.iscte.poo.utils.Direction;
+import pt.iscte.poo.utils.Point2D;
 import pt.iscte.poo.utils.Vector2D;
 
 public abstract class MovableElement extends GameObject {
@@ -13,7 +16,26 @@ public abstract class MovableElement extends GameObject {
 		setPosition(super.getPosition().plus(dir));		
 	}
 	
-	public boolean isSmall() {
-        return false;
-    }
+	public boolean isSmall() { return false; }
+
+	public void processGravity(GameEngine engine) {
+		if (!isSupported()) {
+			move(Direction.DOWN.asVector());
+		}
+	}
+
+	public boolean isSupported() {
+		Point2D posBelow = getPosition().plus(Direction.DOWN.asVector());
+		for (GameObject other : getRoom().getObjects()) {
+			if (other.getPosition().equals(posBelow)) {
+				if (other instanceof Support && ((Support) other).isSupport()) {
+					if(other instanceof HoledWall && this.isSmall()) {
+						return false;
+					}
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

@@ -1,5 +1,6 @@
 package objects;
 
+import pt.iscte.poo.game.GameEngine;
 import pt.iscte.poo.game.Room;
 import pt.iscte.poo.utils.Direction;
 
@@ -18,27 +19,34 @@ public class BigFish extends GameCharacter {
 	}
 
 	@Override
-	public int getLayer() {
-		return 2;
-	}
+	public int getLayer() { return 2; }
 
+	// CORREÇÃO: Limite de empurrar depende da direção
 	@Override
-	public int getPushLimit() { 
+	public int getPushLimit(Direction dir) { 
+		// "pode empurrar na vertical um ÚNICO objecto"
+		if (dir == Direction.UP || dir == Direction.DOWN) {
+			return 1;
+		}
+		// Na horizontal pode empurrar vários
 		return 10;
 	}
 
 	@Override
-	public boolean canPushHeavy() { 
-		return true;
-	}
+	public boolean canPushHeavy() { return true; }
 
 	@Override
-	public int getSupportLimit() { 
-		return 4;
-	}
+	public int getSupportLimit() { return 4; }
 
 	@Override
-	public boolean canSupportHeavy() { 
-		return true;
+	public boolean canSupportHeavy() { return true; }
+
+	@Override
+	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
+		if (actor.isEnemy()) {
+			engine.getCurrentRoom().removeObject(actor);
+			return true;
+		}
+		return super.interact(actor, dir, engine);
 	}
 }

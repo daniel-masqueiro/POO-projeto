@@ -1,5 +1,6 @@
 package objects;
 
+import pt.iscte.poo.game.GameEngine;
 import pt.iscte.poo.game.Room;
 import pt.iscte.poo.utils.Direction;
 
@@ -18,31 +19,31 @@ public class SmallFish extends GameCharacter {
 	}
 
 	@Override
-	public int getLayer() {
-		return 2;
+	public int getLayer() { return 2; }
+	
+	// CORREÇÃO: Assinatura atualizada
+	@Override
+	public int getPushLimit(Direction dir) { 
+		return 1;
 	}
+
+	@Override
+	public boolean canPushHeavy() { return false; }
+	@Override
+	public int getSupportLimit() { return 1; }
+	@Override
+	public boolean canSupportHeavy() { return false; }
 	
 	@Override
-	public int getPushLimit() { 
-		return 1;
-	}
+	public boolean isSmall() { return true; }
 
 	@Override
-	public boolean canPushHeavy() { 
-		return false;
+	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
+		if (actor.isEnemy()) {
+			setFishDeath(true);
+			engine.triggerGameOver("O Peixe Pequeno foi apanhado!");
+			return true;
+		}
+		return super.interact(actor, dir, engine);
 	}
-
-	@Override
-	public int getSupportLimit() { 
-		return 1;
-	}
-
-	@Override
-	public boolean canSupportHeavy() { 
-		return false;
-	}
-	@Override
-    public boolean isSmall() {
-        return true;
-    }
 }
