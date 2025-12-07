@@ -1,6 +1,8 @@
 package objects;
 
+import pt.iscte.poo.game.GameEngine;
 import pt.iscte.poo.game.Room;
+import pt.iscte.poo.utils.Direction;
 
 public class Anchor extends MovableObject {
 
@@ -27,5 +29,20 @@ public class Anchor extends MovableObject {
 
 	public void setMovedHorizontally(boolean moved) {
 		this.hasMovedHorizontally = moved;
+	}
+	@Override
+	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
+		if (dir == Direction.UP) {
+            return false;
+        }
+		if ((dir == Direction.LEFT || dir == Direction.RIGHT) && hasMovedHorizontally) {
+			return false;
+		}
+		boolean moved = super.interact(actor, dir, engine);
+		if (moved && (dir == Direction.LEFT || dir == Direction.RIGHT)) {
+			hasMovedHorizontally = true;
+		}
+
+		return moved;
 	}
 }

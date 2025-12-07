@@ -36,8 +36,9 @@ public class Trap extends MovableObject implements Dangerous, Transpassable {
 					if (actor.isEnemy()) {
 						engine.getCurrentRoom().removeObject(actor);
 					} else {
+						String nomePeixe = (actor instanceof SmallFish) ? "Peixe Pequeno" : "Peixe Grande";
 						actor.setFishDeath(true);
-						engine.triggerGameOver("O " + actor.getName() + " morreu na armadilha!");
+						engine.triggerGameOver("O " + nomePeixe + " morreu na armadilha!");
 					}
 					return true; 
 				}
@@ -46,4 +47,23 @@ public class Trap extends MovableObject implements Dangerous, Transpassable {
 		}
 		return super.interact(actor, dir, engine);
 	}
+	@Override
+    public void processGravity(GameEngine engine) {
+        // Verificar o que está imediatamente abaixo
+        Point2D posBelow = getPosition().plus(Direction.DOWN.asVector());
+        
+        for (GameObject obj : engine.getCurrentRoom().getObjects()) {
+            if (obj.getPosition().equals(posBelow)) {
+                // Se estiver um Peixe Grande em baixo, a armadilha esmaga-o
+                if (obj instanceof BigFish) {
+                    ((BigFish) obj).setFishDeath(true);
+                    engine.triggerGameOver("O Peixe Grande foi esmagado pela armadilha!");
+                    return;
+                }
+            }
+        }
+        
+        // Se não matou ninguém, executa a gravidade normal (cair se não houver chão)
+        super.processGravity(engine);
+    }
 }

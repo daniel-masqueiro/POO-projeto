@@ -217,9 +217,8 @@ public class GameEngine implements Observer {
 		String name = ImageGUI.getInstance().askUser("Introduz o teu nome para o Highscore:");
 		if (name == null || name.trim().isEmpty())
 			name = "Anónimo";
-		HighScoreManager manager = new HighScoreManager();
-		manager.addScore(name, totalMovesRun, totalTimeRun);
-		ImageGUI.getInstance().showMessage("Highscores", manager.getHighScoresBoard());
+		HighScore.registerScore(name, totalMovesRun, totalTimeRun);
+		ImageGUI.getInstance().showMessage("Highscores", HighScore.getBoard());
 		System.exit(0);
 	}
 

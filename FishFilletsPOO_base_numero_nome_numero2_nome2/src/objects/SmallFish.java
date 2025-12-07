@@ -4,7 +4,7 @@ import pt.iscte.poo.game.GameEngine;
 import pt.iscte.poo.game.Room;
 import pt.iscte.poo.utils.Direction;
 
-public class SmallFish extends GameCharacter {
+public class SmallFish extends GameCharacter implements Transpassable {
 
 	private static SmallFish sf = new SmallFish(null);
 	
@@ -45,4 +45,11 @@ public class SmallFish extends GameCharacter {
 		}
 		return super.interact(actor, dir, engine);
 	}
+	@Override
+    public boolean isPassableFor(GameObject obj) {
+        if (obj instanceof Heavy && ((Heavy) obj).isHeavy()) {
+            return true;
+        }
+        return false;
+    }
 }

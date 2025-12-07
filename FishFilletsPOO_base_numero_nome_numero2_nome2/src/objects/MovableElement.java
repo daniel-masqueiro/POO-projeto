@@ -30,7 +30,7 @@ public abstract class MovableElement extends GameObject {
 			if (other.getPosition().equals(posBelow)) {
 				if (other instanceof Support && ((Support) other).isSupport()) {
 					if (other instanceof Transpassable && ((Transpassable) other).isPassableFor(this)) {
-						return false;
+						continue;
 					}
 					return true;
 				}

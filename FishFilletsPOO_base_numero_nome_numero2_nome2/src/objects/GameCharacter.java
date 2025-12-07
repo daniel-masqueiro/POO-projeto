@@ -37,6 +37,10 @@ public abstract class GameCharacter extends MovableElement implements Solid, Pus
 		while (true) {
 			GameObject obj = engine.getObjectAt(currentPos);
 			if (obj == null || !obj.isSolid() || !(obj instanceof MovableElement)) break;
+			if (obj instanceof GameCharacter && !((GameCharacter)obj).isEnemy()) {
+                currentPos = currentPos.plus(Direction.UP.asVector());
+                continue;
+            }
 			itemsAbove++;
 			if (obj instanceof Heavy && ((Heavy)obj).isHeavy()) heavyCount++;
 			currentPos = currentPos.plus(Direction.UP.asVector());
@@ -48,8 +52,9 @@ public abstract class GameCharacter extends MovableElement implements Solid, Pus
 		if (itemsAbove > getSupportLimit()) dies = true;
 		
 		if (dies) {
+			String nomePeixe = (this instanceof SmallFish) ? "O Peixe Pequeno" : "O Peixe Grande";
 			setFishDeath(true);
-			engine.triggerGameOver(getName() + " foi esmagado!");
+			engine.triggerGameOver(nomePeixe + " foi esmagado!");
 		}
 	}
 }
