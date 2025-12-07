@@ -14,20 +14,28 @@ public class Stone extends MovableObject {
 	}
 
 	@Override
-	public String getName() { return "stone"; }
+	public String getName() {
+		return "stone";
+	}
 
 	@Override
-	public int getLayer() { return 3; }
-	
-	public boolean hasMoved() { return hasMoved; }
-	
-	public void setMoved(boolean moved) { this.hasMoved = moved; }
+	public int getLayer() {
+		return 3;
+	}
+
+	public boolean hasMoved() {
+		return hasMoved;
+	}
+
+	public void setMoved(boolean moved) {
+		this.hasMoved = moved;
+	}
 
 	@Override
 	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
 		// Tenta empurrar usando a lógica da classe pai (MovableObject)
 		boolean moved = super.interact(actor, dir, engine);
-		
+
 		// Se moveu e ainda não tinha movido, liberta o caranguejo
 		if (moved && !hasMoved) {
 			hasMoved = true;
@@ -39,7 +47,7 @@ public class Stone extends MovableObject {
 	private void spawnCrab(GameEngine engine) {
 		// Spawn na posição acima da pedra
 		Point2D spawnPos = getPosition().plus(Direction.UP.asVector());
-		
+
 		if (engine.getObjectAt(spawnPos) == null) {
 			Crab crab = new Crab(getRoom());
 			crab.setPosition(spawnPos);

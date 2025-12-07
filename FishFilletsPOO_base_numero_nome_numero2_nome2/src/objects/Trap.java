@@ -19,7 +19,7 @@ public class Trap extends MovableObject implements Dangerous, Transpassable {
 
 	@Override
 	public boolean isLethalTo(GameCharacter character) {
-		return character instanceof BigFish;
+		return character instanceof BigFish || character instanceof Crab;
 	}
 
 	@Override

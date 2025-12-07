@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Map;
 
 import objects.BigFish;
+import objects.Crab;
 import objects.GameCharacter;
 import objects.GameObject;
 import objects.MovableElement;
 import objects.MovableObject;
 import objects.SmallFish;
-import objects.Updatable;
 
 import pt.iscte.poo.gui.ImageGUI;
 import pt.iscte.poo.observer.Observed;
@@ -121,6 +121,8 @@ public class GameEngine implements Observer {
 						// Como o getObjectAt retorna a parede, verificamos se ela permite passagem.
 						// Mas para simplificar e confiar no isMoveValid:
 						activeFish.move(dir.asVector());
+						// CORREÇÃO: O Inimigo move-se EM RESPOSTA ao movimento do peixe
+						moveEnemies();
 						// ----------------------------------------------------
 						
 						if (!ImageGUI.getInstance().isWithinBounds(activeFish.getPosition())) {
@@ -180,6 +182,15 @@ public class GameEngine implements Observer {
 
 		return canPass;
 	}
+	
+	private void moveEnemies() {
+	    // Cria uma cópia da lista para evitar erros de concorrência se um caranguejo morrer a meio
+	    for (GameObject obj : new ArrayList<>(currentRoom.getObjects())) {
+	        if (obj instanceof Crab) {
+	            ((Crab) obj).moveRandomly(this);
+	        }
+	    }
+	}
 
 	private void processTick() {
 		lastTickProcessed++;
@@ -188,9 +199,6 @@ public class GameEngine implements Observer {
 		for (GameObject obj : allObjects) {
 			if (obj instanceof MovableElement) {
 				((MovableElement) obj).processGravity(this);
-			}
-			if (obj instanceof Updatable) {
-				((Updatable) obj).update(this);
 			}
 		}
 		
