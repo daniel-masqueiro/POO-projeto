@@ -30,7 +30,7 @@ public class HighScore implements Comparable<HighScore> {
 
 	@Override
 	public String toString() {
-		return name + " | Mov: " + moves + " | Tempo: " + time + "s | Total: " + scoreValue();
+		return name + " | Mov: " + moves + " | Tempo: " + time + "s";
 	}
 
 	private static final String FILE_NAME = "highscores.txt";
