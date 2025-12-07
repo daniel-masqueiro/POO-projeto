@@ -38,4 +38,7 @@ public abstract class MovableElement extends GameObject {
 		}
 		return false;
 	}
+	public boolean floats() {
+	    return false; // Por defeito, os objetos não flutuam (caem ou ficam parados)
+	}
 }
