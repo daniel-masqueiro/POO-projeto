@@ -28,7 +28,6 @@ public abstract class GameCharacter extends MovableElement implements Solid, Pus
 	@Override
 	public void processGravity(GameEngine engine) { }
 
-	// CORREÇÃO: Lógica de morte por pesados (>1)
 	public void validateCrushing(GameEngine engine) {
 		int itemsAbove = 0;
 		int heavyCount = 0;

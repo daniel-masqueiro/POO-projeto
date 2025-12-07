@@ -18,7 +18,6 @@ public class HoledWall extends GameObject implements Transpassable {
 	
 	@Override
 	public boolean isPassableFor(GameObject obj) {
-		// Deixa passar Copos, Pedras pequenas, Peixes pequenos
 		if (obj instanceof MovableElement) {
 			return ((MovableElement) obj).isSmall();
 		}

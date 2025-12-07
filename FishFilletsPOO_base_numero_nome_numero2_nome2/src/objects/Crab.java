@@ -73,21 +73,15 @@ public class Crab extends GameCharacter implements Dangerous {
 	}
 	@Override
 	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
-	    // Cenário 1: O Peixe Pequeno tenta entrar na casa do Caranguejo
 	    if (isLethalTo(actor)) {
 	        actor.setFishDeath(true);
 	        engine.triggerGameOver("O Peixe Pequeno foi apanhado pelo caranguejo!");
-	        return true; // Retorna true para permitir o movimento visual (sobreposição) antes do reset
+	        return true;
 	    }
-	    
-	    // Cenário 2: O Peixe Grande tenta entrar na casa do Caranguejo
-	    // O requisito diz: "é morto se tocar no peixe grande"
 	    if (actor instanceof BigFish) {
-	        engine.getCurrentRoom().removeObject(this); // O caranguejo morre/desaparece
-	        return true; // O Peixe Grande ocupa o lugar onde estava o caranguejo
+	        engine.getCurrentRoom().removeObject(this);
+	        return true;
 	    }
-	    
-	    // Default: Funciona como parede para outros objetos
 	    return false;
 	}
 }

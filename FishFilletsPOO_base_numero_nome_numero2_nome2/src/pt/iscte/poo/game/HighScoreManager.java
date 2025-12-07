@@ -16,10 +16,10 @@ public class HighScoreManager {
 
     public void addScore(String name, int moves, int time) {
         scores.add(new Score(name, moves, time));
-        Collections.sort(scores); // Ordena do melhor para o pior
+        Collections.sort(scores);
         
         if (scores.size() > 10) {
-            scores.remove(scores.size() - 1); // Remove o pior se tivermos mais de 10
+            scores.remove(scores.size() - 1);
         }
         saveScores();
     }

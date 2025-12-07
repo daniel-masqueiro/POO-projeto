@@ -29,11 +29,8 @@ public class Trap extends MovableObject implements Dangerous, Transpassable {
 
 	@Override
 	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
-		// 1. Verifica se alguém está a tentar ENTRAR diretamente (passos)
 		if (isPassableFor(actor)) {
 			Point2D actorsNextPosition = actor.getPosition().plus(dir.asVector());
-			
-			// Se o ator vai mesmo pisar a armadilha
 			if (actorsNextPosition.equals(this.getPosition())) {
 				if (isLethalTo(actor) || actor.isEnemy()) {
 					if (actor.isEnemy()) {

@@ -14,12 +14,11 @@ public class Score implements Comparable<Score>, Serializable {
 	}
 
 	public int getValue() {
-		return moves + timeInSeconds; // Critério: Soma de movimentos + tempo
+		return moves + timeInSeconds;
 	}
 
 	@Override
 	public int compareTo(Score other) {
-		// Ordenação ascendente (menor pontuação é melhor)
 		return Integer.compare(this.getValue(), other.getValue());
 	}
 
@@ -27,8 +26,6 @@ public class Score implements Comparable<Score>, Serializable {
 	public String toString() {
 		return String.format("%-10s | Mov: %3d | Tempo: %3ds | Total: %3d", name, moves, timeInSeconds, getValue());
 	}
-
-	// Getters para salvar no ficheiro
 	public String getName() {
 		return name;
 	}

@@ -21,7 +21,6 @@ public class SmallFish extends GameCharacter {
 	@Override
 	public int getLayer() { return 2; }
 	
-	// CORREÇÃO: Assinatura atualizada
 	@Override
 	public int getPushLimit(Direction dir) { 
 		return 1;

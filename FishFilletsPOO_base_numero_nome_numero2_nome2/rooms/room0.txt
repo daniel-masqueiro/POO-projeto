@@ -5,6 +5,6 @@ W      b W
 W    WXXXW
 W      C W
 W T SW C W
-W T BW   W
-W R  X X W
+W    W   W
+W B  X   W
 WWWWWWWWWW

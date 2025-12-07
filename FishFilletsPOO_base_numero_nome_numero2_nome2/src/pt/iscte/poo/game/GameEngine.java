@@ -44,12 +44,12 @@ public class GameEngine implements Observer {
 		updateGUI();
 		SmallFish.getInstance().setRoom(currentRoom);
 		if (currentRoom.getSmallFishStartingPosition() != null) {
-            SmallFish.getInstance().setPosition(currentRoom.getSmallFishStartingPosition());
-        }
+			SmallFish.getInstance().setPosition(currentRoom.getSmallFishStartingPosition());
+		}
 		BigFish.getInstance().setRoom(currentRoom);
 		if (currentRoom.getBigFishStartingPosition() != null) {
-            BigFish.getInstance().setPosition(currentRoom.getBigFishStartingPosition());
-        }
+			BigFish.getInstance().setPosition(currentRoom.getBigFishStartingPosition());
+		}
 		this.isSmallFishTurn = true;
 		this.lastTickProcessed = 0;
 		this.numberOfMoves = 0;
@@ -66,10 +66,11 @@ public class GameEngine implements Observer {
 	}
 
 	public GameObject getObjectAt(Point2D p) {
-		if (currentRoom == null) return null;
+		if (currentRoom == null)
+			return null;
 		GameObject movable = null;
 		GameObject staticObj = null;
-		
+
 		for (GameObject obj : currentRoom.getObjects()) {
 			if (obj.getPosition().equals(p) && obj.isSolid()) {
 				if (obj instanceof MovableObject) {
@@ -110,21 +111,11 @@ public class GameEngine implements Observer {
 				if (dir != null) {
 					GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
 					Point2D targetPos = activeFish.getPosition().plus(dir.asVector());
-
-					// Se isMoveValid é true, o objeto (Parede/Trap) já deu autorização.
 					if (isMoveValid(targetPos, dir)) {
 						activeFish.setFacingDirection(dir);
-						
-						// --- CORREÇÃO: Removemos a verificação !isSolid() ---
-						// Isto permite que o peixe entre na HoledWall, pois ela é sólida mas o interact retornou true.
-						// Só não movemos se a posição ainda estiver "logicamente" ocupada (ex: empurrar falhou).
-						// Como o getObjectAt retorna a parede, verificamos se ela permite passagem.
-						// Mas para simplificar e confiar no isMoveValid:
 						activeFish.move(dir.asVector());
-						// CORREÇÃO: O Inimigo move-se EM RESPOSTA ao movimento do peixe
 						moveEnemies();
-						// ----------------------------------------------------
-						
+
 						if (!ImageGUI.getInstance().isWithinBounds(activeFish.getPosition())) {
 							numberFish--;
 							currentRoom.removeObject(activeFish);
@@ -151,26 +142,25 @@ public class GameEngine implements Observer {
 
 	private boolean isMoveValid(Point2D targetPos, Direction dir) {
 		GameCharacter activeFish = isSmallFishTurn ? SmallFish.getInstance() : BigFish.getInstance();
-		
+
 		List<GameObject> allObjects = new ArrayList<>();
 		for (GameObject obj : currentRoom.getObjects()) {
 			if (obj.getPosition().equals(targetPos) && obj.isSolid()) {
 				allObjects.add(obj);
 			}
 		}
-		
-		if (allObjects.isEmpty()) return true;
 
-		// 1. Validar objetos ESTÁTICOS primeiro (Paredes, Troncos)
+		if (allObjects.isEmpty())
+			return true;
+
 		for (GameObject obj : allObjects) {
 			if (!(obj instanceof MovableObject)) {
 				if (!obj.interact(activeFish, dir, this)) {
-					return false; 
+					return false;
 				}
 			}
 		}
 
-		// 2. Validar objetos MÓVEIS (Copos, Pedras, Armadilhas)
 		boolean canPass = true;
 		for (GameObject obj : allObjects) {
 			if (obj instanceof MovableObject) {
@@ -182,14 +172,13 @@ public class GameEngine implements Observer {
 
 		return canPass;
 	}
-	
+
 	private void moveEnemies() {
-	    // Cria uma cópia da lista para evitar erros de concorrência se um caranguejo morrer a meio
-	    for (GameObject obj : new ArrayList<>(currentRoom.getObjects())) {
-	        if (obj instanceof Crab) {
-	            ((Crab) obj).moveRandomly(this);
-	        }
-	    }
+		for (GameObject obj : new ArrayList<>(currentRoom.getObjects())) {
+			if (obj instanceof Crab) {
+				((Crab) obj).moveRandomly(this);
+			}
+		}
 	}
 
 	private void processTick() {
@@ -201,7 +190,7 @@ public class GameEngine implements Observer {
 				((MovableElement) obj).processGravity(this);
 			}
 		}
-		
+
 		SmallFish.getInstance().validateCrushing(this);
 		BigFish.getInstance().validateCrushing(this);
 	}
@@ -226,7 +215,8 @@ public class GameEngine implements Observer {
 	private void handleVictory() {
 		ImageGUI.getInstance().showMessage("VITÓRIA!", "Parabéns, completaste todos os níveis!");
 		String name = ImageGUI.getInstance().askUser("Introduz o teu nome para o Highscore:");
-		if (name == null || name.trim().isEmpty()) name = "Anónimo";
+		if (name == null || name.trim().isEmpty())
+			name = "Anónimo";
 		HighScoreManager manager = new HighScoreManager();
 		manager.addScore(name, totalMovesRun, totalTimeRun);
 		ImageGUI.getInstance().showMessage("Highscores", manager.getHighScoresBoard());

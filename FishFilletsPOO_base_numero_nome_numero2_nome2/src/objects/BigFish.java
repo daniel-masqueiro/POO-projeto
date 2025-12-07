@@ -5,37 +5,53 @@ import pt.iscte.poo.game.Room;
 import pt.iscte.poo.utils.Direction;
 
 public class BigFish extends GameCharacter {
-	
+
 	private static BigFish bf = new BigFish(null);
 
-	private BigFish(Room room) { super(room); }
-	public static BigFish getInstance() { return bf; }
+	private BigFish(Room room) {
+		super(room);
+	}
+
+	public static BigFish getInstance() {
+		return bf;
+	}
 
 	@Override
 	public String getName() {
-		if (isDead) return "deadfish";
-		if (facingDirection == Direction.RIGHT) return "bigFishRight";
+		if (isDead)
+			return "deadfish";
+		if (facingDirection == Direction.RIGHT)
+			return "bigFishRight";
 		return "bigFishLeft";
 	}
 
 	@Override
-	public int getLayer() { return 2; }
+	public int getLayer() {
+		return 2;
+	}
 
 	@Override
-	public int getPushLimit(Direction dir) { 
-		// CORREÇÃO: Limite vertical = 1
-		if (dir == Direction.UP || dir == Direction.DOWN) {
+	public int getPushLimit(Direction dir) {
+		if (dir == Direction.UP) {
 			return 1;
 		}
 		return 10;
 	}
 
 	@Override
-	public boolean canPushHeavy() { return true; }
+	public boolean canPushHeavy() {
+		return true;
+	}
+
 	@Override
-	public int getSupportLimit() { return 4; }
+	public int getSupportLimit() {
+		return 4;
+	}
+
 	@Override
-	public boolean canSupportHeavy() { return true; }
+	public boolean canSupportHeavy() {
+		return true;
+	}
 
 	@Override
 	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {

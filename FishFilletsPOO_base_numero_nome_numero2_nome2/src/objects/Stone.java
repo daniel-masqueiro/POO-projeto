@@ -33,10 +33,7 @@ public class Stone extends MovableObject {
 
 	@Override
 	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
-		// Tenta empurrar usando a lógica da classe pai (MovableObject)
 		boolean moved = super.interact(actor, dir, engine);
-
-		// Se moveu e ainda não tinha movido, liberta o caranguejo
 		if (moved && !hasMoved) {
 			hasMoved = true;
 			spawnCrab(engine);
@@ -45,7 +42,6 @@ public class Stone extends MovableObject {
 	}
 
 	private void spawnCrab(GameEngine engine) {
-		// Spawn na posição acima da pedra
 		Point2D spawnPos = getPosition().plus(Direction.UP.asVector());
 
 		if (engine.getObjectAt(spawnPos) == null) {

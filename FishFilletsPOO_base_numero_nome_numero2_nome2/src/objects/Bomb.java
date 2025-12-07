@@ -10,7 +10,7 @@ import pt.iscte.poo.utils.Point2D;
 public class Bomb extends MovableObject {
 
 	public Bomb(Room room) {
-		super(room, true, true, false); // Leve
+		super(room, true, true, false);
 	}
 	@Override
 	public String getName() { return "bomb"; }	

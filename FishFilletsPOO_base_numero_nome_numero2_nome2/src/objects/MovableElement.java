@@ -29,15 +29,9 @@ public abstract class MovableElement extends GameObject {
 		for (GameObject other : getRoom().getObjects()) {
 			if (other.getPosition().equals(posBelow)) {
 				if (other instanceof Support && ((Support) other).isSupport()) {
-					
-					// --- USO DA INTERFACE PARA GRAVIDADE ---
-					// Se o objeto de baixo deixa-me passar (ex: HoledWall deixa passar SmallObject),
-					// então ele NÃO serve de chão. Eu caio para dentro dele.
 					if (other instanceof Transpassable && ((Transpassable) other).isPassableFor(this)) {
 						return false;
 					}
-					// ---------------------------------------
-					
 					return true;
 				}
 			}
