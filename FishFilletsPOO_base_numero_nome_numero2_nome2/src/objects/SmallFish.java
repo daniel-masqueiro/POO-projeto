@@ -47,7 +47,7 @@ public class SmallFish extends GameCharacter implements Transpassable {
 	}
 	@Override
     public boolean isPassableFor(GameObject obj) {
-        if (obj instanceof Heavy && ((Heavy) obj).isHeavy()) {
+        if (obj instanceof Trap) {
             return true;
         }
         return false;
