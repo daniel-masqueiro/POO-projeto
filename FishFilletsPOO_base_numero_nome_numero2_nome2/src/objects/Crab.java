@@ -58,30 +58,41 @@ public class Crab extends GameCharacter implements Dangerous {
 	}
 
 	public void moveRandomly(GameEngine engine) {
-	    Direction dir = Math.random() < 0.5 ? Direction.LEFT : Direction.RIGHT;
-	    Point2D targetPos = getPosition().plus(dir.asVector());
+		Direction dir = Math.random() < 0.5 ? Direction.LEFT : Direction.RIGHT;
+		Point2D targetPos = getPosition().plus(dir.asVector());
 
-	    if (!ImageGUI.getInstance().isWithinBounds(targetPos)) return;
+		if (!ImageGUI.getInstance().isWithinBounds(targetPos))
+			return;
 
-	    GameObject target = engine.getObjectAt(targetPos);
+		GameObject target = engine.getObjectAt(targetPos);
 
-	    if (target == null) {
-	        move(dir.asVector());
-	    } else {
-	        target.interact(this, dir, engine);
-	    }
+		if (target == null) {
+			move(dir.asVector());
+		} else {
+			if (target.interact(this, dir, engine)) {
+				this.move(dir.asVector());
+			}
+		}
 	}
+
 	@Override
 	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
-	    if (isLethalTo(actor)) {
-	        actor.setFishDeath(true);
-	        engine.triggerGameOver("O Peixe Pequeno foi apanhado pelo caranguejo!");
-	        return true;
-	    }
-	    if (actor instanceof BigFish) {
-	        engine.getCurrentRoom().removeObject(this);
-	        return true;
-	    }
-	    return false;
+		if (isLethalTo(actor)) {
+			actor.setFishDeath(true);
+			engine.triggerGameOver("O Peixe Pequeno foi apanhado pelo caranguejo!");
+			return true;
+		}
+		if (actor instanceof BigFish) {
+			engine.getCurrentRoom().removeObject(this);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void processGravity(GameEngine engine) {
+		if (!isSupported()) {
+			move(Direction.DOWN.asVector());
+		}
 	}
 }
