@@ -24,7 +24,6 @@ public class Buoy extends MovableObject {
 
 	@Override
 	public boolean interact(GameCharacter actor, Direction dir, GameEngine engine) {
-		// Regra: Peixe pequeno não consegue empurrar a boia para baixo
 		if (actor.isSmall() && dir == Direction.DOWN) {
 			return false;
 		}
@@ -33,29 +32,70 @@ public class Buoy extends MovableObject {
 
 	@Override
 	public void processGravity(GameEngine engine) {
-	    Point2D posAbove = getPosition().plus(Direction.UP.asVector());
-	    GameObject objAbove = engine.getObjectAt(posAbove);
+		// Se tiver peso algures na pilha acima, a boia tem de afundar
+		if (hasWeightAbove(engine)) {
+			
+			// 1. Guardar onde a boia está ANTES de cair
+			Point2D originalPos = getPosition();
+			
+			// 2. Tentar mover a boia para baixo (comportamento de objeto pesado)
+			super.processGravity(engine); 
+			
+			// 3. Se a boia mudou de sítio (caíu), temos de puxar tudo o que está em cima
+			// para preencher o "buraco" deixado na originalPos imediatamente.
+			if (!getPosition().equals(originalPos)) {
+				pullChainDown(engine, originalPos);
+			}
+			
+		} else {
+			// Lógica de flutuar (só sobe se não tiver nada sólido em cima)
+			Point2D posAbove = getPosition().plus(Direction.UP.asVector());
+			GameObject objAbove = engine.getObjectAt(posAbove);
+			
+			if (objAbove == null || !objAbove.isSolid()) {
+				if (ImageGUI.getInstance().isWithinBounds(posAbove)) {
+					move(Direction.UP.asVector());
+				}
+			}
+		}
+	}
 
-	    // LÓGICA POLIMÓRFICA:
-	    // Se tiver um objeto em cima, só me comporto como "pedra" (cair) 
-	    // se esse objeto NÃO flutuar. 
-	    // (Taça, Pedra, Bomba -> floats() é false -> eu caio)
-	    // (Outra Boia -> floats() é true -> eu não caio)
-	    if (objAbove instanceof MovableObject && !((MovableElement) objAbove).floats()) {
-	        super.processGravity(engine);
-	    } else {
-	        // Lógica de flutuar (só sobe se não tiver nada sólido em cima)
-	        if (objAbove == null || !objAbove.isSolid()) {
-	            if (ImageGUI.getInstance().isWithinBounds(posAbove)) {
-	                move(Direction.UP.asVector());
-	            }
-	        }
-	        // Se objAbove for uma Boia (Solid e floats=true), entra aqui no 'else',
-	        // falha no check '!objAbove.isSolid()', e fica parada (comportamento correto).
-	    }
+	// Método que sobe a pilha e puxa todos os objetos móveis um nível para baixo
+	private void pullChainDown(GameEngine engine, Point2D holePosition) {
+		Point2D currentHole = holePosition;
+		Point2D nextPosUp = currentHole.plus(Direction.UP.asVector());
+		
+		GameObject objAbove = engine.getObjectAt(nextPosUp);
+		
+		// Enquanto houver objetos móveis para cima (Âncoras, Pedras, outras Boias...)
+		while (objAbove instanceof MovableElement) {
+			// Puxa o objeto para baixo, para tapar o buraco
+			((MovableElement) objAbove).move(Direction.DOWN.asVector());
+			
+			// O "buraco" sobe para onde o objeto estava
+			currentHole = nextPosUp;
+			nextPosUp = currentHole.plus(Direction.UP.asVector());
+			
+			// Vê o que está em cima desse para continuar o ciclo
+			objAbove = engine.getObjectAt(nextPosUp);
+		}
+	}
+	
+	private boolean hasWeightAbove(GameEngine engine) {
+		Point2D currentPos = getPosition().plus(Direction.UP.asVector());
+		
+		while (true) {
+			GameObject obj = engine.getObjectAt(currentPos);
+			if (obj == null || !obj.isSolid()) return false;
+			if (!(obj instanceof MovableElement)) return false; 
+			if (!((MovableElement) obj).floats()) {
+				return true;
+			}
+			currentPos = currentPos.plus(Direction.UP.asVector());
+		}
 	}
 	@Override
 	public boolean floats() {
-	    return true; // A Boia é o único objeto (por enquanto) que declara flutuar
+	    return true;
 	}
 }

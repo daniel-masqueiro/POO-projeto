@@ -41,6 +41,10 @@ public abstract class GameCharacter extends MovableElement implements Solid, Pus
                 currentPos = currentPos.plus(Direction.UP.asVector());
                 continue;
             }
+			if (obj instanceof MovableElement && ((MovableElement) obj).floats()) {
+	            currentPos = currentPos.plus(Direction.UP.asVector());
+	            continue;
+	        }
 			itemsAbove++;
 			if (obj instanceof Heavy && ((Heavy)obj).isHeavy()) heavyCount++;
 			currentPos = currentPos.plus(Direction.UP.asVector());
